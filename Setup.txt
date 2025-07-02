@@ -1,0 +1,117 @@
+Setup
+You need a pen/pencil and paper to keep score.
+Choose a player to be the Dealer for the first round. They will shuffle the deck.
+How to Play Flip 7
+To start each round the Dealer deals one card face up to each player including themselves. If a player receives an action card, the dealer stops dealing cards and the players follow the action corresponding to the action card. See the Flip 7 Special Cards section below for more details on what each card does. After the action card is settled, the Dealer continues dealing cards until everyone has been dealt one card. At this point players may have between zero and four cards (depending on any action cards that were dealt out).
+
+Dealing out the first cards
+In this game there are four different players. The first three players have received their first card. The third player has received a Flip Three card so they will decide who receives three cards. After the three cards are given out, the Dealer resumes by giving the last player one card.
+At this point all of the players look at the card(s) that they have in front of them. There are three types of cards in the game. A majority of the cards in the game are number cards. The number on each card tells you how many of the card there are in the deck, as well as how many points they are worth at the end of the game. For example a twelve card is worth twelve points, but there are also twelve of the cards in the deck. Score Modifier cards add points to a player’s score. Finally Action cards let players take special actions.
+
+At this point all of the players have to decide whether they want to be dealt another card (hit), or if they want to bank the points they already scored (stay). Players need to decide whether they want to risk losing all of the points they have already earned. You will lose all of your points earned in a round if you receive another number card that matches a card that you already have. For example if you already have a ten card, you don’t want to receive another ten card. The goal of each round is to gather as many cards/points as you can, without getting two cards of the same number.
+
+The players in turn order (clockwise) choose whether they want to hit or stay. If you want to hit, you will lay your number cards in a row in front of you. You will place your Score Modifier cards above your number cards. The dealer then gives you a card, and the next player then chooses what they want to do.
+
+Choosing to hit
+This player currently has a three and a eleven number card and a +4 Modifier card. Since the odds of them busting are not high, the player has decided to hit and take another card.
+You can hit as many times as you want in a round. The more cards you have though, the higher the odds that you will bust.
+
+Should you ever receive a number card that you already have, you bust. You will not receive any more cards for the rest of the round. You will score zero points at the end of the round.
+
+Busting by drawing two eleven cards
+This player has drawn two eleven cards. They have busted. They will score zero points this round.
+If you chose to stay, you will turn over all of your cards so they are face down. Should you currently have no cards, you have to hit. Once you choose to stay, you will not receive any more cards for the rest of the round.
+
+Choosing to stay
+This player has chosen to stay. They will score points for each of these cards at the end of the round.
+Flip 7 Special Cards
+Whenever you are dealt an action card (Freeze, Flip Three, Second Chance), you must immediately choose who will use the card. You can choose yourself or any other active player. Any players that have chosen to stay or have busted (gotten two cards of the same number) are no longer active. If you are the only active player left, you must use the action card even if you don’t want it. You will play action cards above the chosen player’s number cards.
+
+Freeze card
+Freeze
+Whenever a player receives a Freeze card, they have to stay. They will bank all of the points they have scored this round. They will not be able to receive anymore cards this round.
+
+Flip Three card
+Flip Three
+Should you receive a Flip Three card, you must take the next three cards from the draw pile. You will flip over one card at a time.
+
+If you end up receiving a Second Chance card, you will add it to your cards. If you end up busting, you can use the card immediately to avoid busting.
+
+Should you receive another Flip Three or Freeze card, you will hold them until you have drawn all three cards from the initial Flip Three card. Should you bust after drawing the three cards, you will ignore any Flip Three or Freeze cards you drew. If you did not bust you can then use the cards by either keeping them for yourself, or giving them to another player.
+
+Using a Flip Three card
+This player was given the Flip Three card by another player. They drew the three cards on the right which included another Flip Three cards. Since they didn’t bust, they can choose who they want to give the Flip Three card to.
+Should you ever qualify for the Flip 7 bonus (have seven different number cards in front of you) or you bust (receive a second card of the same number), you will immediately stop receiving cards even if you still have cards yet to draw due to the Flip Three card.
+
+Second Chance card
+Second Chance
+Whenever you receive a Second Chance card, you will keep it.
+
+Should you ever bust (receive a second card of the same number), you can play the Second Chance card in order to avoid busting. You will discard both the Second Chance card and the duplicate number card.
+
+Using a Second Chance card
+This player has drawn a second five cards. Normally they would bust, but they can use their Second Chance card to stay in the round. They will discard the Second Chance and five cards.
+You can only have one Second Chance card at a time. If you receive a second Second Chance card, you have to give it to another active player. If there are no other active players that do not already have a Second Chance card, you will discard the Second Chance card.
+
+All Second Chance cards are discarded at the end of a round even if the player never used it.
+
+Modifier Cards
+When you draw a Modifier card, you will place the card above your number cards. These cards give you additional points at the end of a round as long as you don’t bust. They do not count towards receiving the Flip 7 bonus though.
+
+You can end your turn with only a Modifier card(s) in front of you. You will score the points printed on the card. X2 cards will not score any points though.
+
+Modifier cards in Flip 7
+Most of the Modifier cards show a +2 to a +10. Each of these cards add the corresponding number of points to your score at the end of a round if you don’t bust.
+
+X2 card
+The X2 card doubles all of the points you score from your number cards. You will add up the total of all of your number cards and then double the total. After you have used the X2 card, you will add in any additional Modifier cards that you have.
+
+End of Round
+A round can end in one of two ways.
+
+First the round ends when there are no active players left. This can happen because all of the players have either chosen to stay or have busted.
+
+Otherwise the game can end when a player has received seven unique number cards. Action and Score Modifier cards do not count towards reaching the Flip 7 bonus. The round immediately ends. The player who has seven unique number cards scores 15 bonus points during scoring.
+
+Flip 7 Bonus
+This player has completed the Flip 7 bonus. The current round ends immediately.
+The players will then tally their scores. See the Scoring section below for more details.
+
+All cards used in the last round are set aside. You will not shuffle the cards to start the next round. The player to the left of the previous Dealer becomes the Dealer for the next round. 
+
+When the deck runs out of cards, you will shuffle all discarded cards to form a new deck. If you need cards in the middle of a round, any cards given to players during the current round stay in front of the players. This includes players that busted. You will only shuffle cards that were discarded in previous rounds.
+
+Scoring
+At the end of each round the players will total the points they scored in the round. Each player writes their score down on the sheet of paper.
+
+Any player that busted scores zero points in the round.
+
+Scoring after busting
+This player busted after drawing a second eleven card. They will score zero points this round.
+If you only have number cards, you will add them up to get your score for the round.
+
+Scoring just numbers in Flip 7
+This player acquired five different number cards. They will score 28 points from the cards.
+Should you have a X2 Modifier card, you will first add up the values of all of your number cards. You will then multiply your score by two.
+
+Scoring with X2
+This player acquired five number cards plus the X2 card. They would normally score 28 points from the number cards. That is doubled to 56 points due to the X2 card.
+If you acquired any point Modifier cards, you will first total the points you scored from number cards. If you have the X2 Modifier card, you will double the points from the number cards. Finally you will add any point Modifier cards to your score.
+
+Scoring with a Modifier card
+This player scores 28 points from the number cards. That is doubled to 56 due to the X2 card. Finally four points are added from the +4 card to get a total of 60 points.
+Should you flip over seven different number cards, you will add an additional 15 points to your score for the round.
+
+Scoring the Flip 7 bonus
+This player acquired seven different number cards giving them the Flip 7 bonus. They will score 42 points from the number cards plus a bonus 15 points for getting seven different numbers. This player scores a total of 57 points this round.
+Winning the Game
+The game ends after at least one player has scored a total of 200 or more points. The player that has scored the most points wins the game.
+
+Components for Flip 7
+Components
+79 Number Cards (each number has a number of cards equal to its number, there is one 0 card)
+6 Score Modifier Cards (+2, +4, +6, +8, +8, +10, X2)
+3 Freeze Cards
+3 Flip Three Cards
+3 Second Chance Cards
+Instructions
