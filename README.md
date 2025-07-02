@@ -4,7 +4,7 @@
 This game will use native interactive elements and elements that natively hold state
 - [ ] **Github Actions**
     - [ ] Lighthouse CI
-    - [ ] Axe Linter
+    - [x] Axe Linter
     - [ ] ESLint
 
 ## Outline
@@ -35,17 +35,17 @@ This phase focuses on creating the project structure and the fundamental data mo
     - [x] Set up a Git repository (`git init`).
     - [x] Create `index.html`, `styles/style.css`, `js/app.js`, `js/deck.js`, and `js/ui.js`.
 
-- [ ] **HTML Structure (`index.html`)**
-    - [ ] Set up the basic HTML document structure (`<!DOCTYPE html>`, `head`, `body`).
-    - [ ] Link to the stylesheet: `<link rel="stylesheet" href="styles/style.css">`.
-    - [ ] Link to the JavaScript files (in order): `<script src="js/deck.js"></script>`, `<script src="js/ui.js"></script>`, `<script src="js/app.js" defer></script>`.
-    - [ ] Create the main game container: `<div id="game-board">`.
-    - [ ] Add display areas inside the board:
+- [x] **HTML Structure (`index.html`)**
+    - [x] Set up the basic HTML document structure (`<!DOCTYPE html>`, `head`, `body`).
+    - [x] Link to the stylesheet: `<link rel="stylesheet" href="styles/style.css">`.
+    - [x] Link to the JavaScript files (in order): `<script src="js/deck.js"></script>`, `<script src="js/ui.js"></script>`, `<script src="js/app.js" defer></script>`.
+    - [x] Create the main game container: `<div id="game-board">`.
+    - [x] Add display areas inside the board:
         - `<div id="info-panel">` for score and card count.
         - `<div id="player-hand">` to hold the flipped cards.
         - `<div id="deck-area">` for the deck and status messages.
-    - [ ] Add control buttons: `<button id="flip-btn">Flip Card</button>`, `<button id="bank-btn">Bank</button>`, `<button id="new-game-btn">New Game</button>`.
-    - [ ] Add elements for displaying data: `<span id="current-total">0</span>`, `<span id="cards-flipped">0</span>`, and `<p id="game-message"></p>`.
+    - [x] Add control buttons: `<button id="flip-btn">Flip Card</button>`, `<button id="bank-btn">Bank</button>`, `<button id="new-game-btn">New Game</button>`.
+    - [x] Add elements for displaying data: `<span id="current-total">0</span>`, `<span id="cards-flipped">0</span>`, and `<p id="game-message"></p>`.
 
 - [ ] **Card & Deck Modeling (`js/deck.js`)**
     - [ ] Create a `Deck` class.

@@ -1,0 +1,24 @@
+{
+  "name": "flip-7",
+  "version": "1.0.0",
+  "description": "## Bake Accessibility In This game will use native interactive elements and elements that natively hold state - [ ] **Github Actions**     - [ ] Lighthouse CI     - [ ] Axe Linter     - [ ] ESLint",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
+    "husky": "^8.0.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript-eslint": "^8.35.1"
+  }
+}
