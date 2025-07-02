@@ -1,9 +1,14 @@
-/**
- * Card component for Flip 7
- * Props: card { type: 'number'|'modifier'|'action', value: number|string, label?: string }
- * For now, just show the number or label centered, with color for type
- */
-export default function Card({ card }) {
+export interface CardType {
+  type: 'number' | 'modifier' | 'action';
+  value: number | string;
+  label?: string;
+}
+
+interface CardProps {
+  card: CardType;
+}
+
+function Card({ card }: CardProps) {
   let bg = 'bg-white';
   let text = 'text-black';
   if (card.type === 'modifier') {
@@ -14,14 +19,13 @@ export default function Card({ card }) {
     text = 'text-yellow-900';
   }
   return (
-    <div
+    <button
       className={`card flex items-center justify-center rounded shadow w-16 h-24 m-1 text-2xl font-bold ${bg} ${text}`}
-      role="img"
       aria-label={card.label || String(card.value)}
-      tabIndex={0}
     >
-      {/* Placeholder for card face graphic */}
       <span>{card.label || card.value}</span>
-    </div>
+    </button>
   );
 }
+
+export default Card;

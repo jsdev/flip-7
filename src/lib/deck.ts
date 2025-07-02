@@ -1,20 +1,20 @@
 // Deck and Card class definitions for Flip 7 (modular, dumb data only)
 
-/**
- * Card object for Flip 7
- * @typedef {Object} Card
- * @property {'number'|'modifier'|'action'} type
- * @property {number|string} value
- * @property {string} [label]
- */
+export interface CardType {
+  type: 'number' | 'modifier' | 'action';
+  value: number | string;
+  label?: string;
+}
 
 export class Deck {
+  cards: CardType[];
+
   constructor() {
     this.cards = this.generateDeck();
   }
 
-  generateDeck() {
-    const cards = [];
+  generateDeck(): CardType[] {
+    const cards: CardType[] = [];
     // Number cards: 1x0, 2x1, 3x2, ..., 12x11, 13x12
     for (let num = 0; num <= 12; num++) {
       for (let i = 0; i < num + 1; i++) {
@@ -22,9 +22,9 @@ export class Deck {
       }
     }
     // Modifier cards: +2, +4, +6, +8, +8, +10, X2
-    const modifiers = [2, 4, 6, 8, 8, 10, 'X2'];
+    const modifiers = [2, 4, 6, 8, 8, 10, 'X2'] as const;
     for (const mod of modifiers) {
-      cards.push({ type: 'modifier', value: mod, label: mod === 'X2' ? '×2' : `+${mod}` });
+      cards.push({ type: 'modifier', value: mod, label: mod === 'X2' ? '\u00d72' : `+${mod}` });
     }
     // Action cards: 3 Freeze, 3 Flip Three, 3 Second Chance
     for (let i = 0; i < 3; i++) {
@@ -35,7 +35,7 @@ export class Deck {
     return cards;
   }
 
-  shuffle() {
+  shuffle(): void {
     // Fisher-Yates shuffle
     for (let i = this.cards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -43,7 +43,7 @@ export class Deck {
     }
   }
 
-  deal() {
+  deal(): CardType | undefined {
     return this.cards.shift();
   }
 }

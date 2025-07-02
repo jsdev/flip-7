@@ -1,32 +1,52 @@
 # Flip 7 Web Game (Preact + Tailwind Modular)
 
 ## Accessibility & CI
-- [ ] Axe Linter GitHub Action
-- [ ] Lighthouse CI GitHub Action
-- [ ] ESLint + Prettier + Husky pre-commit
+
+- [x] Axe Linter GitHub Action (Vite/Preact)
+- [x] Lighthouse CI GitHub Action (Vite/Preact)
+- [x] ESLint + Prettier + Husky pre-commit (Vite/Preact)
 
 ## Project Structure
-- [x] Preact + Vite + Tailwind scaffold
-- [x] Modular Deck logic in `src/lib/deck.js`
-- [x] Main GameBoard component in `src/components/GameBoard.jsx`
-- [x] Card component in `src/components/Card.jsx`
-- [ ] InfoPanel, Controls, and PlayerHand components
-- [ ] Game state and turn management for 4 players (no accounts)
-- [ ] Responsive, accessible UI
+
+- [x] Preact + Vite + Tailwind scaffold (modern, modular setup)
+- [x] Modular Deck logic in `src/lib/deck.ts` (dumb, data-only, Flip 7 rules)
+- [x] Main GameBoard component in `src/components/GameBoard.tsx` (handles state, turn, log)
+- [x] Card component in `src/components/Card.tsx` (dumb, accessible, styled)
+- [x] PlayerHand, ActionQueue, InfoPanel components (modular, UI-focused)
+- [x] Controls component (Flip, Bank, New Game)
+- [ ] TallyBoard component (end-of-game stats, superlatives)
+- [x] Design and instructions markdown files
+- [x] Settings file for configuration
+- [ ] Responsive, accessible UI polish
 
 ## Game Logic
-- [ ] Support for 4 players, rotating turns
-- [ ] Each player has their own hand and score
+
+- [x] Support for 4 players, rotating turns
+- [x] Each player has their own hand and score
+- [x] Game state, round, and turn management
+- [x] Action log for superlatives and stats
+- [ ] Full action card resolution (Freeze, Flip Three, Second Chance)
 - [ ] Game ends after all players finish
 - [ ] Show winner and allow new game
+- [x] Controls: Flip, Bank, New Game (see below for rules)
+
+### Flipping & Banking Rules
+
+- Players may FLIP to draw a card on their turn.
+- Players may BANK their round score at the start of their turn, before flipping a new card.
+- Banking does NOT require a Freeze card; it is a strategic choice.
+- If a player flips and busts, they lose their unbanked points for the round.
+- Players are tempted to keep flipping for more points, but must bank before flipping to secure their score.
 
 ## UI/UX
+
 - [x] Card rendering with ARIA/semantic markup
-- [ ] Info panel for current player, scores, and turn
-- [ ] Controls: Flip, Bank, New Game
+- [x] Info panel for current player, scores, and turn
+- [x] Controls: Flip, Bank, New Game
 - [ ] Animations and polish
-- [ ] Instructions/how to play section
+- [x] Instructions/how to play section
 
 ## Testing & Deployment
+
 - [ ] Manual and automated tests
 - [ ] Deploy to GitHub Pages/Netlify
