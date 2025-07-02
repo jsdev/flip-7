@@ -1,3 +1,5 @@
 {
-  "numberCardInsertMode": "end"
+  "numberCardInsertMode": "end",
+  "playerCount": 4,
+  "computerPlayerCount": 0
 }

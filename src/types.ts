@@ -1,20 +1,20 @@
 // Shared types for Flip 7 Preact app
 
 export interface CardType {
-  type: 'number' | 'modifier' | 'action';
-  value: number | string;
-  label?: string;
+  readonly type: 'number' | 'modifier' | 'action';
+  readonly value: number | string;
+  readonly label?: string;
 }
 
 export interface Player {
-  name: string;
-  score: number;
-  numberCards: CardType[];
-  modifiers: CardType[];
-  actionCards: CardType[];
-  secondChance: boolean;
-  busted: boolean;
-  banked: boolean;
-  isDealer: boolean;
-  isActive: boolean;
+  readonly name: string;
+  readonly score: number;
+  readonly numberCards: ReadonlyArray<CardType>;
+  readonly modifiers: ReadonlyArray<CardType>;
+  readonly actionCards: ReadonlyArray<CardType>;
+  readonly secondChance: boolean;
+  readonly busted: boolean;
+  readonly banked: boolean;
+  readonly isDealer: boolean;
+  readonly isActive: boolean;
 }

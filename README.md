@@ -25,7 +25,10 @@
 - [x] Each player has their own hand and score
 - [x] Game state, round, and turn management
 - [x] Action log for superlatives and stats
-- [ ] Full action card resolution (Freeze, Flip Three, Second Chance)
+- [ ] Full action card resolution:
+  - [x] Freeze
+  - [ ] Flip Three
+  - [ ] Second Chance
 - [ ] Game ends after all players finish
 - [ ] Show winner and allow new game
 - [x] Controls: Flip, Bank, New Game (see below for rules)
@@ -50,3 +53,15 @@
 
 - [ ] Manual and automated tests
 - [ ] Deploy to GitHub Pages/Netlify
+
+## Strict Functional Linting
+
+This project enforces pure, immutable, and functional game logic using ESLint with:
+
+- `eslint-plugin-functional`
+- `eslint-plugin-sonarjs`
+- `eslint-plugin-unicorn`
+
+See `strict-functional.eslint.config.js` for the strict rules applied to all core logic and tests. All contributors must follow the doctrine in `DOCTRINE.md` and pass linting before merging.
+
+For rationale and details, see `FLIP7_PURE_LOGIC_LINT_BLOG.md`.

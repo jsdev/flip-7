@@ -6,10 +6,49 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-plugin-prettier';
+import functional from 'eslint-plugin-functional';
+import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
   js.configs.recommended,
+  // Strict functional/immutable rules for core logic and tests
+  {
+    files: ['src/lib/**/*.ts', 'src/__tests__/**/*.ts'],
+    plugins: {
+      functional,
+      sonarjs,
+      unicorn,
+    },
+    rules: {
+      'functional/immutable-data': ['error', { ignoreIdentifierPattern: '^draft' }],
+      'functional/no-let': 'error',
+      'functional/no-loop-statements': 'error',
+      'functional/no-mixed-types': 'error',
+      'functional/no-return-void': 'error',
+      'functional/prefer-readonly-type': 'error',
+      'functional/prefer-property-signatures': 'error',
+      'functional/prefer-tacit': 'warn',
+      'functional/type-declaration-immutability': 'error',
+      'functional/no-classes': 'error',
+      'functional/no-class-inheritance': 'error',
+      'functional/no-conditional-statements': 'off', // allow if/else for clarity in UI
+      'functional/no-expression-statements': 'off', // allow for UI rendering
+      'functional/no-promise-reject': 'error',
+      'functional/no-this-expressions': 'error',
+      'functional/no-throw-statements': 'error',
+      'functional/no-try-statements': 'error',
+      'functional/functional-parameters': 'error',
+      // ...other rules as needed...
+      'unicorn/prefer-ternary': 'error',
+      'unicorn/no-array-push-push': 'error',
+      'unicorn/no-for-loop': 'error',
+      'unicorn/no-null': 'error',
+      'sonarjs/no-duplicate-string': 'warn',
+      'sonarjs/cognitive-complexity': ['warn', 10],
+    },
+  },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
