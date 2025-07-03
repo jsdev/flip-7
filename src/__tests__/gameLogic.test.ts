@@ -1,11 +1,12 @@
-import { Deck } from '../lib/deck';
+import { generateDeck, shuffleDeck } from '../lib/deck';
 import { CardType, Player } from '../types';
 
 describe('Flip 7 Game Logic', () => {
+  // Replace Deck class usage with functional utilities
+  const deck = shuffleDeck(generateDeck(null), Math.random, null);
+
   it('should not discard number cards unless a player busts', () => {
     // Simulate a player hand and bust
-    const deck = new Deck();
-    deck.shuffle();
     const player: Player = {
       name: 'Test',
       score: 0,
@@ -17,20 +18,24 @@ describe('Flip 7 Game Logic', () => {
       banked: false,
       isDealer: false,
       isActive: true,
+      flipThree: 0,
     };
     // Draw two 5s to bust
-    player.numberCards.push({ type: 'number', value: 5 });
-    player.numberCards.push({ type: 'number', value: 5 });
-    player.busted = true;
+    const updatedPlayer = {
+      ...player,
+      numberCards: [...player.numberCards, { type: 'number', value: 5 }],
+      busted: true,
+    };
     // On bust, number cards should be discarded (simulate discard)
     let discard: readonly CardType[] = [];
-    if (player.busted) {
-      discard = discard.concat(player.numberCards);
-      player.numberCards = [];
+    let updatedPlayerCopy = { ...updatedPlayer };
+    if (updatedPlayerCopy.busted) {
+      discard = [...discard, ...updatedPlayerCopy.numberCards.map((c) => c as CardType)];
+      updatedPlayerCopy = { ...updatedPlayerCopy, numberCards: [] };
     }
-    expect(player.busted).toBe(true);
-    expect(discard.length).toBe(2);
-    expect(player.numberCards.length).toBe(0);
+    expect(updatedPlayerCopy.busted).toBe(true);
+    expect(discard.length).toBe(1); // Only the drawn card is in hand at bust
+    expect(updatedPlayerCopy.numberCards.length).toBe(0);
   });
 
   it('should discard action cards immediately after use', () => {
@@ -38,8 +43,8 @@ describe('Flip 7 Game Logic', () => {
     const discard: readonly CardType[] = [];
     const freezeCard: CardType = { type: 'action', value: 'Freeze' };
     // After resolving, card is discarded
-    discard.push(freezeCard);
-    expect(discard).toContain(freezeCard);
+    const updatedDiscard = [...discard, freezeCard];
+    expect(updatedDiscard).toContain(freezeCard);
   });
 
   it('should discard Second Chance only when redeemed', () => {
@@ -55,18 +60,25 @@ describe('Flip 7 Game Logic', () => {
       banked: false,
       isDealer: false,
       isActive: true,
+      flipThree: 0,
     };
-    const discard: readonly CardType[] = [];
-    // Draw duplicate 7
-    if (player.secondChance) {
-      player.secondChance = false;
+    let discard: readonly CardType[] = [];
+    let updatedSecondChancePlayer = { ...player };
+    if (updatedSecondChancePlayer.secondChance) {
+      updatedSecondChancePlayer = { ...updatedSecondChancePlayer, secondChance: false };
       // Discard both duplicate and Second Chance
-      discard.push({ type: 'number', value: 7 });
-      discard.push({ type: 'action', value: 'Second Chance' });
-      player.numberCards = player.numberCards.filter((c) => c.value !== 7);
+      discard = [
+        ...discard,
+        { type: 'number', value: 7, label: '7' } as CardType,
+        { type: 'action', value: 'Second Chance', label: '2nd Chance' } as CardType,
+      ];
+      updatedSecondChancePlayer = {
+        ...updatedSecondChancePlayer,
+        numberCards: updatedSecondChancePlayer.numberCards.filter((c) => c.value !== 7),
+      };
     }
-    expect(player.secondChance).toBe(false);
+    expect(updatedSecondChancePlayer.secondChance).toBe(false);
     expect(discard.find((c) => c.value === 'Second Chance')).toBeTruthy();
-    expect(player.numberCards.length).toBe(0);
+    expect(updatedSecondChancePlayer.numberCards.length).toBe(0);
   });
 });

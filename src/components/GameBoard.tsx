@@ -1,10 +1,16 @@
 import { useState } from 'preact/hooks';
-import { Deck, CardType } from '../lib/deck';
+import { generateDeck, shuffleDeck, dealCard } from '../lib/deck';
+import { CardType } from '../types';
 import PlayerComposition from './PlayerComposition';
 import FlipStack from './FlipStack';
 import DiscardPile from './DiscardPile';
 import Controls from './Controls';
 import CurrentScore from './CurrentScore';
+import { ScenarioExplanation as SecondChanceExplanation } from '../scenario/second-chance';
+import { ScenarioExplanation as DrawThreeExplanation } from '../scenario/draw-three';
+import { ScenarioExplanation as NestedDrawThreeExplanation } from '../scenario/nested-draw-three';
+import { ScenarioExplanation as FreezeExplanation } from '../scenario/freeze';
+import { ScenarioExplanation as SecondChanceRedeemedExplanation } from '../scenario/secondchance-redeemed';
 
 const PLAYER_COUNT = 4;
 
@@ -18,6 +24,7 @@ interface Player {
   banked: boolean;
   isDealer: boolean;
   isActive: boolean;
+  flipThree: number;
 }
 
 function createInitialPlayers(): Player[] {
@@ -31,14 +38,15 @@ function createInitialPlayers(): Player[] {
     banked: false,
     isDealer: i === 0,
     isActive: i === 0,
+    flipThree: 0,
   }));
 }
 
-function calcSafeOdds(deck: Deck, playerNumbers: number[]): number {
-  const safeNumbers = deck.cards.filter(
+function calcSafeOdds(deck: ReadonlyArray<CardType>, playerNumbers: number[]): number {
+  const safeNumbers = deck.filter(
     (c) => c.type === 'number' && !playerNumbers.includes(Number(c.value)),
   ).length;
-  return safeNumbers / deck.cards.length;
+  return safeNumbers / deck.length;
 }
 
 interface ActionLogEntry {
@@ -72,9 +80,8 @@ function getLuckiestFlipper(actionLog: ActionLogEntry[]): string[] {
 // Add a stack to manage nested action contexts
 export default function GameBoard() {
   const [deck, setDeck] = useState(() => {
-    const d = new Deck();
-    d.shuffle();
-    return d;
+    const d = generateDeck(null);
+    return shuffleDeck(d, Math.random, null);
   });
   const [discard, setDiscard] = useState<CardType[]>([]);
   const [players, setPlayers] = useState<Player[]>(createInitialPlayers());
@@ -113,11 +120,10 @@ export default function GameBoard() {
   // Handler: Flip a card
   function handleFlip() {
     if (gameOver || (currentAction && currentAction.pendingAction)) return;
-    // Use currentAction if in a nested context, else default
     const ctx = currentAction || {};
     const isFlipThree = !!ctx.flipThreeState;
     const actingPlayer = isFlipThree ? ctx.flipThreeState.target : currentPlayer;
-    const card = deck.deal();
+    const [card, newDeck] = dealCard(deck, null);
     if (!card) {
       setStatus('Deck is empty!');
       return;
@@ -261,7 +267,7 @@ export default function GameBoard() {
       }
       return;
     }
-    setDeck(new Deck()); // For now, just reset deck to avoid mutation issues
+    setDeck(newDeck);
   }
 
   // Handler: Resolve pending action (Freeze or Flip Three)
@@ -384,9 +390,8 @@ export default function GameBoard() {
   // Handler: New Game
   function handleNewGame() {
     setDeck(() => {
-      const d = new Deck();
-      d.shuffle();
-      return d;
+      const d = generateDeck(null);
+      return shuffleDeck(d, Math.random, null);
     });
     setDiscard([]);
     setPlayers(createInitialPlayers());
@@ -496,6 +501,32 @@ export default function GameBoard() {
           </div>
         </div>
       ))}
+      {/* Scenario explanations overlay */}
+      {status === 'Second Chance acquired!' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <SecondChanceExplanation />
+        </div>
+      )}
+      {status.includes('must flip three cards') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <DrawThreeExplanation />
+        </div>
+      )}
+      {status.includes('completed Flip Three! Returning to previous action.') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <NestedDrawThreeExplanation />
+        </div>
+      )}
+      {status.includes('was frozen and banked') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <FreezeExplanation />
+        </div>
+      )}
+      {status === 'Second Chance redeemed!' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <SecondChanceRedeemedExplanation />
+        </div>
+      )}
     </div>
   );
 }

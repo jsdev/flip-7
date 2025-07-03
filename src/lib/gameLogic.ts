@@ -1,4 +1,11 @@
-import { CardType, Player } from '../types';
+import { Player } from '../types';
+import { flipThreeStep } from './flipThree';
+
+export type CardType = {
+  type: 'number' | 'modifier' | 'action';
+  value: number | string;
+  label?: string;
+};
 
 export interface GameState {
   readonly deck: ReadonlyArray<CardType>;
@@ -20,9 +27,8 @@ export type ActionContext = {
     readonly actingPlayer: number;
   };
   readonly flipThreeState?: {
-    readonly originalPlayer: number;
-    readonly target: number;
-    readonly flipsRemaining: number;
+    target: number;
+    flipsRemaining: number;
   };
   readonly parent?: ActionContext;
 };
@@ -64,114 +70,139 @@ function addModifier(player: Player, card: CardType): Player {
 
 // Pure helper: mark player as busted and clear hand
 function bustPlayer(player: Player, card: CardType): Player {
-  return { ...player, busted: true, numberCards: [...player.numberCards, card] };
+  return { ...player, busted: true, numberCards: [...player.numberCards, card], flipThree: 0 };
+}
+
+// Helper: is player at a choice point (can flip, bank, or pass)?
+function isChoicePoint(state: GameState, player: Player): boolean {
+  // Not at choice point if forced to flip (flipThree > 0), busted, banked, or pending action
+  if (player.busted || player.banked) return false;
+  if (player.flipThree > 0) return false;
+  if (state.currentAction && state.currentAction.pendingAction) return false;
+  return true;
 }
 
 export function flipCard(state: GameState): GameState {
-  if (state.gameOver || (state.currentAction && state.currentAction.pendingAction)) return state;
+  // Block all actions except handleActionTarget if pendingAction exists
+  if (state.currentAction && state.currentAction.pendingAction) return state;
+  if (state.gameOver) return state;
   const ctx = state.currentAction ?? {};
-  const actingPlayer = ctx && ctx.flipThreeState ? ctx.flipThreeState.target : state.currentPlayer;
+  const actingPlayer = state.currentPlayer;
   const [card, newDeck] = drawCard(state.deck);
   if (!card) {
-    return { ...state, status: 'Deck is empty!' };
+    return { ...state, status: GameStatus.DeckEmpty };
   }
-  // Use ReadonlyArray for all player card arrays to match Player type
-  const players = state.players.map((p) => ({
-    ...p,
-    numberCards: [...p.numberCards] as ReadonlyArray<CardType>,
-    modifiers: [...p.modifiers] as ReadonlyArray<CardType>,
-    actionCards: [...p.actionCards] as ReadonlyArray<CardType>,
-  }));
+
+  const players = state.players.map((p) => ({ ...p }));
   let player = { ...players[actingPlayer] };
+
   if (card.type === 'number') {
+    // Check for bust BEFORE adding card
     if (player.numberCards.some((c) => c.value === card.value)) {
-      // Busted: create new player object and clear numberCards
-      const bustedPlayer = bustPlayer(player, card);
-      const discard = [...state.discard, ...bustedPlayer.numberCards];
-      const updatedPlayers = players.map((p, i) =>
-        i === actingPlayer ? { ...bustedPlayer, numberCards: [] } : p,
-      );
-      if (ctx && ctx.flipThreeState) {
-        const newState = popActionContext({
+      if (player.secondChance) {
+        // Only discard the drawn card and Second Chance, keep the hand unchanged
+        const discard = [
+          ...state.discard,
+          { type: 'number', value: card.value } as CardType,
+          { type: 'action', value: 'Second Chance' } as CardType,
+        ];
+        const newPlayers = players.map((p, i) =>
+          i === actingPlayer
+            ? { ...player, secondChance: false, busted: false } // hand unchanged
+            : p,
+        );
+        const status = isChoicePoint(state, newPlayers[actingPlayer])
+          ? GameStatus.ChoicePoint
+          : GameStatus.SecondChanceSurvived;
+        return {
           ...state,
           deck: newDeck,
-          players: updatedPlayers,
+          players: newPlayers,
           discard,
-        });
+          status,
+        };
+      } else {
+        // Bust: discard all number cards
+        const bustedPlayer = bustPlayer(player, card);
+        const discard = [...state.discard, ...bustedPlayer.numberCards];
+        const newPlayers = players.map((p, i) =>
+          i === actingPlayer ? { ...bustedPlayer, numberCards: [], flipThree: 0 } : p,
+        );
         return {
-          ...newState,
-          status: `${player.name} busted during Flip Three! Returning to previous action.`,
+          ...state,
+          deck: newDeck,
+          players: newPlayers,
+          discard,
+          status: GameStatus.Busted,
         };
       }
+    }
+    // Safe: decrement flipThree if active, then add card to hand
+    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
+    const newHand = [...player.numberCards, card];
+    // Check for Flip 7 bonus BEFORE updating player
+    const uniqueNumbers = new Set(newHand.map((c) => c.value));
+    if (newHand.length === 7 && uniqueNumbers.size === 7) {
+      // Award Flip 7 bonus, clear hand, bank, end round
+      const bonusScore =
+        newHand.reduce((sum, c) => sum + Number(c.value), 0) + GameConstants.Flip7Bonus;
+      // Clear unbanked players' hands and scores, preserve banked players
+      const newPlayers = players.map((p, i) => {
+        if (i === actingPlayer) {
+          return {
+            ...player,
+            score: player.score + bonusScore,
+            numberCards: [],
+            modifiers: [],
+            banked: true,
+          };
+        } else if (!p.banked) {
+          return { ...p, numberCards: [], modifiers: [], score: 0 };
+        } else {
+          // Banked players keep their score, but hand and modifiers are cleared
+          return { ...p, numberCards: [], modifiers: [] };
+        }
+      });
       return {
         ...state,
         deck: newDeck,
-        players: updatedPlayers,
-        discard,
-        status: `Busted! Drew another ${card.value}`,
+        players: newPlayers,
+        status: GameStatus.Flip7BonusAwarded,
+        gameOver: true,
       };
     }
+    player = { ...player, flipThree: newFlipThree };
     player = addCardToHand(player, card);
-  } else if (card.type === 'modifier') {
-    player = addModifier(player, card);
-  } else if (card.type === 'action') {
-    return resolveAction({ ...state, deck: newDeck, players }, card, actingPlayer, ctx);
-  }
-  const updatedPlayers = players.map((p, i) => (i === actingPlayer ? player : p));
-  if (ctx && ctx.flipThreeState) {
-    if (ctx.flipThreeState.flipsRemaining > 1) {
-      const updatedCtx: ActionContext = {
-        ...ctx,
-        flipThreeState: {
-          ...ctx.flipThreeState,
-          flipsRemaining: ctx.flipThreeState.flipsRemaining - 1,
-        },
-      };
-      return {
-        ...state,
-        deck: newDeck,
-        players: updatedPlayers,
-        currentAction: updatedCtx,
-        actionStack: [updatedCtx, ...state.actionStack.slice(1)],
-        status: `Flipped: ${card.label || card.value}`,
-      };
-    }
-    // Pop context and, if parent is a Flip Three, decrement its flipsRemaining
-    const prevStack = state.actionStack.slice(1);
-    let newActionStack = prevStack;
-    let newCurrentAction = prevStack[0];
-    let newPlayers = updatedPlayers;
-    if (prevStack[0] && prevStack[0].flipThreeState) {
-      const parentCtx = prevStack[0];
-      const updatedParentCtx: ActionContext = {
-        ...parentCtx,
-        flipThreeState: {
-          ...parentCtx.flipThreeState!,
-          flipsRemaining: parentCtx.flipThreeState!.flipsRemaining - 1,
-        },
-      };
-      newActionStack = [updatedParentCtx, ...prevStack.slice(1)];
-      newCurrentAction = updatedParentCtx;
-      // Ensure the player's hand is preserved when returning to parent Flip Three
-      newPlayers = newPlayers.map((p, i) =>
-        i === actingPlayer ? { ...p, numberCards: [...player.numberCards] } : p,
-      );
-    }
+    const newPlayers = players.map((p, i) => (i === actingPlayer ? player : p));
+    const status = isChoicePoint(state, player) ? GameStatus.ChoicePoint : GameStatus.Flipped;
     return {
       ...state,
       deck: newDeck,
       players: newPlayers,
-      actionStack: newActionStack,
-      currentAction: newCurrentAction,
-      status: `${player.name} completed Flip Three! Returning to previous action.`,
+      status,
     };
+  } else if (card.type === 'modifier') {
+    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
+    let newModifiers = [...player.modifiers, card];
+    const newPlayers = players.map((p, i) =>
+      i === actingPlayer ? { ...player, flipThree: newFlipThree, modifiers: newModifiers } : p,
+    );
+    const status = isChoicePoint(state, newPlayers[actingPlayer])
+      ? GameStatus.ChoicePoint
+      : GameStatus.Flipped;
+    return {
+      ...state,
+      deck: newDeck,
+      players: newPlayers,
+      status,
+    };
+  } else if (card.type === 'action') {
+    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
+    player = { ...player, flipThree: newFlipThree };
+    const newPlayers = players.map((p, i) => (i === actingPlayer ? player : p));
+    return resolveAction({ ...state, deck: newDeck, players: newPlayers }, card, actingPlayer, ctx);
   }
-  return {
-    ...state,
-    deck: newDeck,
-    players: updatedPlayers,
-    status: `Flipped: ${card.label || card.value}`,
-  };
+  return state;
 }
 
 export function resolveAction(
@@ -180,11 +211,23 @@ export function resolveAction(
   actingPlayer: number,
   ctx: ActionContext,
 ): GameState {
-  if (card.value === 'Freeze' || card.value === 'Flip Three') {
+  if (card.value === 'Freeze') {
     // Push current context and start new action
     const newCtx: ActionContext = {
       pendingAction: {
-        type: card.value === 'Freeze' ? 'freeze' : 'flip-three',
+        type: 'freeze',
+        card,
+        actingPlayer,
+      },
+      parent: ctx,
+    };
+    return pushActionContext({ ...state, discard: [...state.discard, card] }, newCtx);
+  }
+  if (card.value === 'Flip Three') {
+    // Prompt for target, then set flipThree=3 for that player in handleActionTarget
+    const newCtx: ActionContext = {
+      pendingAction: {
+        type: 'flip-three',
         card,
         actingPlayer,
       },
@@ -200,7 +243,7 @@ export function resolveAction(
       ...state,
       players,
       discard: [...state.discard, card],
-      status: 'Second Chance acquired!',
+      status: GameStatus.SecondChanceAcquired,
     };
   }
   return state;
@@ -211,48 +254,58 @@ export function handleActionTarget(state: GameState, targetIdx: number): GameSta
   const { type, card, actingPlayer } = state.currentAction.pendingAction;
   const players = state.players.map((p) => ({ ...p }));
   if (type === 'freeze') {
-    const roundScore =
-      players[targetIdx].numberCards.reduce((sum, c) => sum + Number(c.value), 0) +
-      players[targetIdx].modifiers.reduce(
-        (sum, mod) => (typeof mod.value === 'number' ? sum + mod.value : sum),
-        0,
-      );
-    const updatedPlayer = {
-      ...players[targetIdx],
-      score: players[targetIdx].score + roundScore,
-      numberCards: [],
-      modifiers: [],
-      banked: true,
-      busted: false,
-    };
-    const updatedPlayers = players.map((p, i) => (i === targetIdx ? updatedPlayer : p));
+    // Use bankScore to DRY banking logic for Freeze
     const newState = popActionContext({
-      ...state,
-      players: updatedPlayers,
+      ...bankScore(state, targetIdx),
       discard: [...state.discard, card],
     });
     return {
       ...newState,
-      status: `${updatedPlayer.name} was frozen and banked ${roundScore} points!`,
+      status: GameStatus.FreezeBanked,
     };
   } else if (type === 'flip-three') {
-    // Push a new Flip Three context for the target
-    const newCtx: ActionContext = {
-      flipThreeState: {
-        originalPlayer: actingPlayer,
-        target: targetIdx,
-        flipsRemaining: 3,
-      },
-      parent: state.currentAction,
+    // Set flipThree=3 for the target player
+    players[targetIdx] = { ...players[targetIdx], flipThree: 3 };
+    const newState = popActionContext({
+      ...state,
+      players,
+      discard: [...state.discard, card],
+    });
+    return {
+      ...newState,
+      status: GameStatus.FlipThreeComplete,
     };
-    return pushActionContext({ ...state, discard: [...state.discard, card] }, newCtx);
   }
   return state;
 }
 
 export function bankScore(state: GameState, playerIdx: number): GameState {
+  // Block all actions except handleActionTarget if pendingAction exists
+  if (state.currentAction && state.currentAction.pendingAction) return state;
   const players = state.players.map((p) => ({ ...p }));
-  const player = { ...players[playerIdx] };
+  let player = { ...players[playerIdx] };
+  // If player used Second Chance and has no cards, ensure hand is empty and score is 0
+  if (player.numberCards.length === 0) {
+    player = { ...player, score: 0, numberCards: [], modifiers: [], banked: true, busted: false };
+    const updatedPlayers = players.map((p, i) => (i === playerIdx ? player : p));
+    return {
+      ...state,
+      players: updatedPlayers,
+      status: GameStatus.Banked,
+    };
+  }
+  if (player.busted) {
+    return {
+      ...state,
+      status: GameStatus.CannotBankBusted,
+    };
+  }
+  if (player.flipThree > 0) {
+    return {
+      ...state,
+      status: GameStatus.CannotBankDuringFlipThree,
+    };
+  }
   const roundScore =
     player.numberCards.reduce((sum, c) => sum + Number(c.value), 0) +
     player.modifiers.reduce(
@@ -268,9 +321,61 @@ export function bankScore(state: GameState, playerIdx: number): GameState {
     busted: false,
   };
   const updatedPlayers = players.map((p, i) => (i === playerIdx ? updatedPlayer : p));
+  // Flip 7 bonus: if player has 7 unique number cards, award bonus and clear hand
+  const uniqueNumbers = new Set(player.numberCards.map((c) => c.value));
+  if (player.numberCards.length === 7 && uniqueNumbers.size === 7) {
+    const bonusScore =
+      player.numberCards.reduce((sum, c) => sum + Number(c.value), 0) + GameConstants.Flip7Bonus;
+    const updatedPlayers = players.map((p, i) => {
+      if (i === playerIdx) {
+        return { ...player, score: player.score + bonusScore, numberCards: [], banked: true };
+      } else if (!p.banked) {
+        return { ...p, numberCards: [], modifiers: [], score: 0 };
+      } else {
+        // Banked players keep their score, but hand and modifiers are cleared
+        return { ...p, numberCards: [], modifiers: [] };
+      }
+    });
+    return {
+      ...state,
+      players: updatedPlayers,
+      gameOver: true,
+      status: GameStatus.Flip7BonusAwarded,
+    };
+  }
+  if (state.currentPlayer === playerIdx) {
+    // Advance to next player if current player just banked
+    const nextPlayerIdx = (playerIdx + 1) % players.length;
+    return {
+      ...state,
+      players: updatedPlayers,
+      currentPlayer: nextPlayerIdx,
+      status: GameStatus.Banked,
+    };
+  }
   return {
     ...state,
     players: updatedPlayers,
-    status: `${player.name} banked ${roundScore} points!`,
+    status: GameStatus.Banked,
   };
+}
+
+export enum GameStatus {
+  DeckEmpty = 'deck-empty',
+  SecondChanceSurvived = 'second-chance-survived',
+  Busted = 'busted',
+  Flip7 = 'flip-7',
+  FlipThreeComplete = 'flip-three-complete',
+  FreezeBanked = 'freeze-banked',
+  SecondChanceAcquired = 'second-chance-acquired',
+  Banked = 'banked',
+  CannotBankBusted = 'cannot-bank-busted',
+  CannotBankDuringFlipThree = 'cannot-bank-during-flip-three',
+  Flipped = 'flipped',
+  Flip7BonusAwarded = 'flip-7-bonus-awarded',
+  ChoicePoint = 'choice-point',
+}
+
+export enum GameConstants {
+  Flip7Bonus = 15,
 }

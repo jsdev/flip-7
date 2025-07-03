@@ -17,4 +17,5 @@ export interface Player {
   readonly banked: boolean;
   readonly isDealer: boolean;
   readonly isActive: boolean;
+  readonly flipThree: number; // Number of forced flips remaining (0 if not active)
 }
