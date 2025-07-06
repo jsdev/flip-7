@@ -1,4 +1,5 @@
-import { GameState, CardType, ActionContext, GameStatus } from '../lib/gameLogic';
+/* eslint-disable functional/no-let, functional/immutable-data */
+import { GameState, ActionContext, GameStatus } from '../lib/gameLogic';
 
 /**
  * Handles a single flip in a Flip Three context, updating the player's hand and context stack.

@@ -1,0 +1,72 @@
+name: Visual Regression Testing
+
+on:
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - 'playwright.config.ts'
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Start preview server
+      run: npm run preview &
+      
+    - name: Wait for server
+      run: npx wait-on http://localhost:4173 --timeout 30000
+      
+    - name: Run visual regression tests
+      run: npm run test:playwright
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+        
+    - name: Upload test screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: visual-diff-screenshots
+        path: test-results/
+        retention-days: 30
+        
+    - name: Comment PR with visual diff results
+      uses: actions/github-script@v7
+      if: failure()
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ **Visual regression test failed!**\n\nPlease check the uploaded artifacts for visual differences and update baselines if the changes are intentional.\n\nTo update baselines locally:\n```bash\nnpm run test:visual:update\n```'
+          })

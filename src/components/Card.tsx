@@ -1,5 +1,5 @@
 export interface CardType {
-  type: 'number' | 'modifier' | 'action';
+  type: 'number' | 'modifier' | 'action' | 'bonus';
   value: number | string;
   label?: string;
 }
@@ -17,6 +17,9 @@ function Card({ card }: CardProps) {
   } else if (card.type === 'action') {
     bg = 'bg-yellow-200';
     text = 'text-yellow-900';
+  } else if (card.type === 'bonus') {
+    bg = 'bg-green-200';
+    text = 'text-green-900';
   }
   return (
     <button

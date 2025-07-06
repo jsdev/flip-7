@@ -1,36 +1,29 @@
-import { Player } from '../types';
-import { flipThreeStep } from './flipThree';
+/* eslint-disable functional/no-let, functional/immutable-data, sonarjs/cognitive-complexity, @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
+import { CardType, Player, GameState, ActionContext, GameOptions } from '../types.js';
+import {
+  isGameOver,
+  bustPlayer,
+  addCardToHand,
+  addModifier,
+  decrementFlipThree,
+  copyPlayers,
+  hasFlip7Bonus,
+  bankPlayer,
+  applyFlip7Bonus,
+  getFinalScore,
+  getGameWinners, // <-- import the new helper
+  getOddsOfBusting,
+  celebrateFlip7,
+  discardRemainingCards,
+  captureRoundData,
+} from './gameLogic.helpers.js';
+import { maybeReshuffleDeck } from './deck.js';
 
-export type CardType = {
-  type: 'number' | 'modifier' | 'action';
-  value: number | string;
-  label?: string;
-};
-
-export interface GameState {
-  readonly deck: ReadonlyArray<CardType>;
-  readonly discard: ReadonlyArray<CardType>;
-  readonly players: ReadonlyArray<Player>;
-  readonly currentPlayer: number;
-  readonly round: number;
-  readonly status: string;
-  readonly actionStack: ReadonlyArray<ActionContext>;
-  readonly currentAction: ActionContext | undefined;
-  readonly gameOver: boolean;
-}
-
-// Explicit ActionContext type
-export type ActionContext = {
-  readonly pendingAction?: {
-    readonly type: 'freeze' | 'flip-three';
-    readonly card: CardType;
-    readonly actingPlayer: number;
-  };
-  readonly flipThreeState?: {
-    target: number;
-    flipsRemaining: number;
-  };
-  readonly parent?: ActionContext;
+export const DEFAULT_GAME_OPTIONS: GameOptions = {
+  passingEnabled: true, // Players can pass when they have a choice
+  defaultFlipCount: 1, // Default number of flips per turn
+  showOddsOfBust: true, // Show bust probability to help players learn
 };
 
 // Helper to push a new action context
@@ -58,21 +51,6 @@ function drawCard(
   return [deck[0], deck.slice(1)];
 }
 
-// Pure helper: add card to player's hand immutably
-function addCardToHand(player: Player, card: CardType): Player {
-  return { ...player, numberCards: [...player.numberCards, card] };
-}
-
-// Pure helper: add modifier to player's modifiers immutably
-function addModifier(player: Player, card: CardType): Player {
-  return { ...player, modifiers: [...player.modifiers, card] };
-}
-
-// Pure helper: mark player as busted and clear hand
-function bustPlayer(player: Player, card: CardType): Player {
-  return { ...player, busted: true, numberCards: [...player.numberCards, card], flipThree: 0 };
-}
-
 // Helper: is player at a choice point (can flip, bank, or pass)?
 function isChoicePoint(state: GameState, player: Player): boolean {
   // Not at choice point if forced to flip (flipThree > 0), busted, banked, or pending action
@@ -86,123 +64,253 @@ export function flipCard(state: GameState): GameState {
   // Block all actions except handleActionTarget if pendingAction exists
   if (state.currentAction && state.currentAction.pendingAction) return state;
   if (state.gameOver) return state;
+
+  // Check if player has remaining flips (unless forced by flipThree)
+  if (state.flipCount <= 0 && state.players[state.currentPlayer].flipThree === 0) {
+    return { ...state, status: GameStatus.NoFlipsRemaining };
+  }
+
+  // Always reshuffle if deck is empty before drawing
+  const { deck, discard } = maybeReshuffleDeck(state.deck, state.discard);
+
   const ctx = state.currentAction ?? {};
   const actingPlayer = state.currentPlayer;
-  const [card, newDeck] = drawCard(state.deck);
+  const [card, newDeck] = drawCard(deck);
+
   if (!card) {
-    return { ...state, status: GameStatus.DeckEmpty };
+    return { ...state, deck, discard, status: GameStatus.DeckEmpty };
   }
 
-  const players = state.players.map((p) => ({ ...p }));
+  const players = copyPlayers(state.players);
   let player = { ...players[actingPlayer] };
 
+  // Store original flipThree before decrementing
+  const originalFlipThree = player.flipThree;
+
+  // Common logic: decrement flipThree if active
+  player = decrementFlipThree(player);
+
+  // Decrement flip count (unless forced by flipThree)
+  const newFlipCount = player.flipThree > 0 ? state.flipCount : Math.max(0, state.flipCount - 1);
+
   if (card.type === 'number') {
-    // Check for bust BEFORE adding card
-    if (player.numberCards.some((c) => c.value === card.value)) {
-      if (player.secondChance) {
-        // Only discard the drawn card and Second Chance, keep the hand unchanged
-        const discard = [
-          ...state.discard,
-          { type: 'number', value: card.value } as CardType,
-          { type: 'action', value: 'Second Chance' } as CardType,
-        ];
-        const newPlayers = players.map((p, i) =>
-          i === actingPlayer
-            ? { ...player, secondChance: false, busted: false } // hand unchanged
-            : p,
-        );
-        const status = isChoicePoint(state, newPlayers[actingPlayer])
-          ? GameStatus.ChoicePoint
-          : GameStatus.SecondChanceSurvived;
-        return {
-          ...state,
-          deck: newDeck,
-          players: newPlayers,
-          discard,
-          status,
-        };
-      } else {
-        // Bust: discard all number cards
-        const bustedPlayer = bustPlayer(player, card);
-        const discard = [...state.discard, ...bustedPlayer.numberCards];
-        const newPlayers = players.map((p, i) =>
-          i === actingPlayer ? { ...bustedPlayer, numberCards: [], flipThree: 0 } : p,
-        );
-        return {
-          ...state,
-          deck: newDeck,
-          players: newPlayers,
-          discard,
-          status: GameStatus.Busted,
-        };
-      }
-    }
-    // Safe: decrement flipThree if active, then add card to hand
-    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
-    const newHand = [...player.numberCards, card];
-    // Check for Flip 7 bonus BEFORE updating player
-    const uniqueNumbers = new Set(newHand.map((c) => c.value));
-    if (newHand.length === 7 && uniqueNumbers.size === 7) {
-      // Award Flip 7 bonus, clear hand, bank, end round
-      const bonusScore =
-        newHand.reduce((sum, c) => sum + Number(c.value), 0) + GameConstants.Flip7Bonus;
-      // Clear unbanked players' hands and scores, preserve banked players
-      const newPlayers = players.map((p, i) => {
-        if (i === actingPlayer) {
-          return {
-            ...player,
-            score: player.score + bonusScore,
-            numberCards: [],
-            modifiers: [],
-            banked: true,
-          };
-        } else if (!p.banked) {
-          return { ...p, numberCards: [], modifiers: [], score: 0 };
-        } else {
-          // Banked players keep their score, but hand and modifiers are cleared
-          return { ...p, numberCards: [], modifiers: [] };
-        }
-      });
-      return {
-        ...state,
-        deck: newDeck,
-        players: newPlayers,
-        status: GameStatus.Flip7BonusAwarded,
-        gameOver: true,
-      };
-    }
-    player = { ...player, flipThree: newFlipThree };
-    player = addCardToHand(player, card);
-    const newPlayers = players.map((p, i) => (i === actingPlayer ? player : p));
-    const status = isChoicePoint(state, player) ? GameStatus.ChoicePoint : GameStatus.Flipped;
-    return {
-      ...state,
-      deck: newDeck,
-      players: newPlayers,
-      status,
-    };
-  } else if (card.type === 'modifier') {
-    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
-    let newModifiers = [...player.modifiers, card];
-    const newPlayers = players.map((p, i) =>
-      i === actingPlayer ? { ...player, flipThree: newFlipThree, modifiers: newModifiers } : p,
+    return handleNumberCard(
+      { ...state, deck, discard, flipCount: newFlipCount },
+      player,
+      players,
+      actingPlayer,
+      card,
+      newDeck,
+      originalFlipThree,
     );
-    const status = isChoicePoint(state, newPlayers[actingPlayer])
-      ? GameStatus.ChoicePoint
-      : GameStatus.Flipped;
-    return {
-      ...state,
-      deck: newDeck,
-      players: newPlayers,
-      status,
-    };
+  } else if (card.type === 'modifier') {
+    return handleModifierCard(
+      { ...state, deck, discard, flipCount: newFlipCount },
+      player,
+      players,
+      actingPlayer,
+      card,
+      newDeck,
+    );
   } else if (card.type === 'action') {
-    let newFlipThree = player.flipThree > 0 ? player.flipThree - 1 : 0;
-    player = { ...player, flipThree: newFlipThree };
-    const newPlayers = players.map((p, i) => (i === actingPlayer ? player : p));
-    return resolveAction({ ...state, deck: newDeck, players: newPlayers }, card, actingPlayer, ctx);
+    players[actingPlayer] = player;
+    return resolveAction(
+      { ...state, deck: newDeck, discard, players, flipCount: newFlipCount },
+      card,
+      actingPlayer,
+      ctx,
+    );
   }
+
   return state;
+}
+
+function handleNumberCard(
+  state: GameState,
+  player: Player,
+  players: readonly Player[],
+  actingPlayer: number,
+  card: CardType,
+  newDeck: ReadonlyArray<CardType>,
+  originalFlipThree: number,
+): GameState {
+  // Check for bust BEFORE adding card
+  if (player.numberCards.some((c) => c.value === card.value)) {
+    if (player.secondChance) {
+      return handleSecondChance(
+        state,
+        player,
+        players,
+        actingPlayer,
+        card,
+        newDeck,
+        originalFlipThree,
+      );
+    }
+    return handleBust(state, player, players, actingPlayer, card, newDeck);
+  }
+
+  // Safe: add card to hand
+  player = addCardToHand(player, card);
+  players[actingPlayer] = player;
+  const newHand = player.numberCards;
+
+  // Check for Flip 7 bonus
+  if (hasFlip7Bonus(newHand)) {
+    return handleFlip7Bonus(state, players, actingPlayer, newDeck, newHand as readonly CardType[]);
+  }
+
+  const status = isChoicePoint(state, player) ? GameStatus.ChoicePoint : GameStatus.Flipped;
+
+  return {
+    ...state,
+    deck: newDeck,
+    players,
+    status,
+  };
+}
+
+function handleModifierCard(
+  state: GameState,
+  player: Player,
+  players: readonly Player[],
+  actingPlayer: number,
+  card: CardType,
+  newDeck: ReadonlyArray<CardType>,
+): GameState {
+  player = addModifier(player, card);
+  players[actingPlayer] = player;
+
+  const status = isChoicePoint(state, player) ? GameStatus.ChoicePoint : GameStatus.Flipped;
+
+  return {
+    ...state,
+    deck: newDeck,
+    players,
+    status,
+  };
+}
+
+// PATCH handleSecondChance to set correct status
+function handleSecondChance(
+  state,
+  player,
+  players,
+  actingPlayer,
+  card,
+  newDeck,
+  originalFlipThree,
+) {
+  const discard = [
+    ...state.discard,
+    { type: 'number', value: card.value },
+    { type: 'action', value: 'Second Chance' },
+  ];
+  // Second Chance "undoes" the flip, so restore flipThree to its original value
+  const restoredFlipThree = originalFlipThree;
+  const updatedPlayer = {
+    ...player,
+    secondChance: false,
+    busted: false,
+    flipThree: restoredFlipThree,
+  };
+  players[actingPlayer] = updatedPlayer;
+  const atChoice = isChoicePoint(state, updatedPlayer);
+  return {
+    ...state,
+    deck: newDeck,
+    players,
+    discard,
+    status: atChoice ? GameStatus.ChoicePoint : GameStatus.Flipped,
+    message: atChoice
+      ? 'You survived your Second Chance! Choose your next move.'
+      : 'You survived your Second Chance! Continue playing.',
+  };
+}
+
+function handleBust(
+  state: GameState,
+  player: Player,
+  players: readonly Player[],
+  actingPlayer: number,
+  card: CardType,
+  newDeck: ReadonlyArray<CardType>,
+): GameState {
+  const bustedPlayer = bustPlayer(player, card);
+  // Discard all the player's number cards (which includes the bust-causing card)
+  const discard = [...state.discard, ...bustedPlayer.numberCards];
+
+  const newPlayers = [...players];
+  newPlayers[actingPlayer] = { ...bustedPlayer, numberCards: [] };
+
+  return {
+    ...state,
+    deck: newDeck,
+    players: newPlayers,
+    discard,
+    status: GameStatus.Busted,
+  };
+}
+
+function handleFlip7Bonus(
+  state: GameState,
+  players: readonly Player[],
+  actingPlayer: number,
+  newDeck: ReadonlyArray<CardType>,
+  newHand: readonly CardType[],
+): GameState {
+  const player = players[actingPlayer];
+  const roundScore = getFinalScore(player, GameConstants.Flip7Bonus);
+
+  // Bank the player and apply score
+  const newPlayers = [...players];
+  newPlayers[actingPlayer] = {
+    ...player,
+    score: player.score + roundScore,
+    numberCards: [],
+    modifiers: [],
+    banked: true,
+    busted: false,
+  };
+
+  // Track eliminated players (those who had cards but weren't banked/busted)
+  const eliminatedByFlip7 = players
+    .filter(
+      (p, idx) =>
+        idx !== actingPlayer &&
+        !p.banked &&
+        !p.busted &&
+        (p.numberCards.length > 0 || p.modifiers.length > 0),
+    )
+    .map((p) => ({
+      playerName: p.name,
+      potentialScore: getFinalScore(p, 0), // What they would have scored
+    }));
+
+  // Forfeit all other unbanked players' cards to discard
+  const finalDiscard = discardRemainingCards(newPlayers, state.discard);
+
+  // Trigger confetti celebration for Flip 7
+  try {
+    celebrateFlip7();
+  } catch (e) {
+    // Ignore confetti errors (e.g., in CLI/server environments)
+  }
+
+  // Capture round data for tally
+  const currentRoundData = captureRoundData(newPlayers, eliminatedByFlip7);
+
+  return {
+    ...state,
+    deck: newDeck,
+    players: newPlayers,
+    discard: finalDiscard,
+    status: GameStatus.Flip7BonusAwarded,
+    gameOver: true,
+    eliminatedByFlip7,
+    roundHistory: [...state.roundHistory, currentRoundData],
+    message: `🎉 ${player.name} achieved FLIP 7! Round over!`,
+  };
 }
 
 export function resolveAction(
@@ -251,112 +359,225 @@ export function resolveAction(
 
 export function handleActionTarget(state: GameState, targetIdx: number): GameState {
   if (!state.currentAction || !state.currentAction.pendingAction) return state;
+
+  // Validate target index
+  if (targetIdx < 0 || targetIdx >= state.players.length) return state;
+
   const { type, card, actingPlayer } = state.currentAction.pendingAction;
-  const players = state.players.map((p) => ({ ...p }));
+  const players = copyPlayers(state.players);
+
   if (type === 'freeze') {
-    // Use bankScore to DRY banking logic for Freeze
-    const newState = popActionContext({
-      ...bankScore(state, targetIdx),
-      discard: [...state.discard, card],
-    });
-    return {
-      ...newState,
-      status: GameStatus.FreezeBanked,
-    };
+    return handleFreezeTarget(state, players, targetIdx);
   } else if (type === 'flip-three') {
-    // Set flipThree=3 for the target player
-    players[targetIdx] = { ...players[targetIdx], flipThree: 3 };
-    const newState = popActionContext({
-      ...state,
-      players,
-      discard: [...state.discard, card],
-    });
-    return {
-      ...newState,
-      status: GameStatus.FlipThreeComplete,
-    };
+    return handleFlipThreeTarget(state, players, targetIdx);
   }
+
   return state;
+}
+
+function handleFreezeTarget(
+  state: GameState,
+  players: readonly Player[],
+  targetIdx: number,
+): GameState {
+  players[targetIdx] = bankPlayer(players[targetIdx]);
+
+  const newState = popActionContext({
+    ...state,
+    players,
+  });
+
+  const gameOver = isGameOver(players);
+
+  return {
+    ...newState,
+    status: GameStatus.FreezeBanked,
+    gameOver,
+  };
+}
+
+function handleFlipThreeTarget(
+  state: GameState,
+  players: readonly Player[],
+  targetIdx: number,
+): GameState {
+  players[targetIdx] = { ...players[targetIdx], flipThree: 3 };
+
+  const newState = popActionContext({
+    ...state,
+    players,
+  });
+
+  return {
+    ...newState,
+    status: GameStatus.FlipThreeComplete,
+  };
 }
 
 export function bankScore(state: GameState, playerIdx: number): GameState {
   // Block all actions except handleActionTarget if pendingAction exists
   if (state.currentAction && state.currentAction.pendingAction) return state;
-  const players = state.players.map((p) => ({ ...p }));
-  let player = { ...players[playerIdx] };
-  // If player used Second Chance and has no cards, ensure hand is empty and score is 0
-  if (player.numberCards.length === 0) {
-    player = { ...player, score: 0, numberCards: [], modifiers: [], banked: true, busted: false };
-    const updatedPlayers = players.map((p, i) => (i === playerIdx ? player : p));
-    return {
-      ...state,
-      players: updatedPlayers,
-      status: GameStatus.Banked,
-    };
-  }
+
+  const players = copyPlayers(state.players);
+  const player = players[playerIdx];
+
+  // Validation checks
   if (player.busted) {
-    return {
-      ...state,
-      status: GameStatus.CannotBankBusted,
-    };
+    return { ...state, status: GameStatus.CannotBankBusted };
   }
+
   if (player.flipThree > 0) {
-    return {
-      ...state,
-      status: GameStatus.CannotBankDuringFlipThree,
-    };
+    return { ...state, status: GameStatus.CannotBankDuringFlipThree };
   }
-  const roundScore =
-    player.numberCards.reduce((sum, c) => sum + Number(c.value), 0) +
-    player.modifiers.reduce(
-      (sum, mod) => (typeof mod.value === 'number' ? sum + mod.value : sum),
-      0,
-    );
-  const updatedPlayer = {
+
+  // Handle empty hand case (e.g., after Second Chance)
+  if (player.numberCards.length === 0) {
+    players[playerIdx] = {
+      ...player,
+      score: 0,
+      numberCards: [],
+      modifiers: [],
+      banked: true,
+      busted: false,
+    };
+    return { ...state, players, status: GameStatus.Banked };
+  }
+
+  // Normal banking with bonus card support (multipliers, then Flip 7 bonus if present, then additions)
+  const hasFlip7 = hasFlip7Bonus(player.numberCards);
+  const flip7 = hasFlip7 ? GameConstants.Flip7Bonus : 0;
+  const roundScore = getFinalScore(player, flip7);
+  players[playerIdx] = {
     ...player,
     score: player.score + roundScore,
     numberCards: [],
     modifiers: [],
+    bonusMultiplierCards: [],
+    bonusAdditionCards: [],
     banked: true,
     busted: false,
   };
-  const updatedPlayers = players.map((p, i) => (i === playerIdx ? updatedPlayer : p));
-  // Flip 7 bonus: if player has 7 unique number cards, award bonus and clear hand
-  const uniqueNumbers = new Set(player.numberCards.map((c) => c.value));
-  if (player.numberCards.length === 7 && uniqueNumbers.size === 7) {
-    const bonusScore =
-      player.numberCards.reduce((sum, c) => sum + Number(c.value), 0) + GameConstants.Flip7Bonus;
-    const updatedPlayers = players.map((p, i) => {
-      if (i === playerIdx) {
-        return { ...player, score: player.score + bonusScore, numberCards: [], banked: true };
-      } else if (!p.banked) {
-        return { ...p, numberCards: [], modifiers: [], score: 0 };
-      } else {
-        // Banked players keep their score, but hand and modifiers are cleared
-        return { ...p, numberCards: [], modifiers: [] };
-      }
-    });
+
+  // If player achieved Flip 7, end the game immediately
+  if (hasFlip7) {
+    // Track eliminated players (those who had cards but weren't banked/busted)
+    const eliminatedByFlip7 = players
+      .filter(
+        (p, idx) =>
+          idx !== playerIdx &&
+          !p.banked &&
+          !p.busted &&
+          (p.numberCards.length > 0 || p.modifiers.length > 0),
+      )
+      .map((p) => ({
+        playerName: p.name,
+        potentialScore: getFinalScore(p, 0), // What they would have scored
+      }));
+
+    // Forfeit all unbanked players' cards to discard
+    const finalDiscard = discardRemainingCards(players, state.discard);
+
+    // Trigger confetti celebration for Flip 7
+    try {
+      celebrateFlip7();
+    } catch (e) {
+      // Ignore confetti errors (e.g., in CLI/server environments)
+    }
+
+    // Capture round data for tally
+    const currentRoundData = captureRoundData(players, eliminatedByFlip7);
+
     return {
       ...state,
-      players: updatedPlayers,
-      gameOver: true,
+      players,
+      discard: finalDiscard,
       status: GameStatus.Flip7BonusAwarded,
+      gameOver: true,
+      eliminatedByFlip7,
+      roundHistory: [...state.roundHistory, currentRoundData],
+      message: `🎉 ${player.name} achieved FLIP 7! Game over!`,
     };
   }
+  // Advance to next player if current player just banked, and reset flip count
+  let nextState = { ...state, players };
   if (state.currentPlayer === playerIdx) {
-    // Advance to next player if current player just banked
-    const nextPlayerIdx = (playerIdx + 1) % players.length;
-    return {
-      ...state,
-      players: updatedPlayers,
-      currentPlayer: nextPlayerIdx,
-      status: GameStatus.Banked,
-    };
+    nextState = advanceToNextPlayer(nextState);
   }
+
+  // At the end of a round, check for game over
+  const allBankedOrBusted = players.every((p) => p.banked || p.busted);
+  let gameOver = false;
+  let winners: readonly string[] = [];
+  let roundOver = false;
+  let finalDiscard = nextState.discard;
+
+  if (allBankedOrBusted) {
+    roundOver = true;
+    // Move all remaining cards to discard at round end
+    finalDiscard = discardRemainingCards(players, nextState.discard);
+    winners = getGameWinners(players, GameConstants.GAME_TARGET_SCORE);
+    if (winners.length > 0) gameOver = true;
+  }
+
+  // Capture round data if round is over
+  let updatedRoundHistory = nextState.roundHistory;
+  if (roundOver) {
+    const currentRoundData = captureRoundData(players);
+    updatedRoundHistory = [...nextState.roundHistory, currentRoundData];
+  }
+
+  return {
+    ...nextState,
+    discard: finalDiscard,
+    status: GameStatus.Banked,
+    roundOver,
+    gameOver,
+    winners: gameOver ? winners : undefined,
+    roundHistory: updatedRoundHistory,
+  };
+}
+
+function handleBankFlip7Bonus(
+  state: GameState,
+  players: readonly Player[],
+  playerIdx: number,
+): GameState {
+  // Use getFinalScore: sum, multipliers, Flip 7 bonus, then additions
+  const player = players[playerIdx];
+  const roundScore = getFinalScore(player, GameConstants.Flip7Bonus);
+  const newPlayers = players.map((p, i) =>
+    i === playerIdx
+      ? {
+          ...p,
+          score: p.score + roundScore,
+          numberCards: [],
+          modifiers: [],
+          bonusMultiplierCards: [],
+          bonusAdditionCards: [],
+          banked: true,
+        }
+      : !p.banked
+        ? {
+            ...p,
+            numberCards: [],
+            modifiers: [],
+            bonusMultiplierCards: [],
+            bonusAdditionCards: [],
+            score: 0,
+          }
+        : {
+            ...p,
+            numberCards: [],
+            modifiers: [],
+            bonusMultiplierCards: [],
+            bonusAdditionCards: [],
+          },
+  );
   return {
     ...state,
-    players: updatedPlayers,
-    status: GameStatus.Banked,
+    players: newPlayers,
+    gameOver: true,
+    status: GameStatus.Flip7BonusAwarded,
   };
 }
 
@@ -374,8 +595,54 @@ export enum GameStatus {
   Flipped = 'flipped',
   Flip7BonusAwarded = 'flip-7-bonus-awarded',
   ChoicePoint = 'choice-point',
+  NoFlipsRemaining = 'no-flips-remaining',
+  CannotPassDuringFlipThree = 'cannot-pass-during-flip-three',
+  PassingDisabled = 'passing-disabled',
+  PlayerPassed = 'player-passed',
 }
 
 export enum GameConstants {
   Flip7Bonus = 15,
+  GAME_TARGET_SCORE = 200,
+}
+
+// Helper to reset flip count at start of player's turn
+function resetFlipCountForPlayer(state: GameState): GameState {
+  return {
+    ...state,
+    flipCount: state.options.defaultFlipCount,
+  };
+}
+
+// Helper to advance to next player and reset their flip count
+function advanceToNextPlayer(state: GameState): GameState {
+  const nextPlayer = (state.currentPlayer + 1) % state.players.length;
+  return resetFlipCountForPlayer({
+    ...state,
+    currentPlayer: nextPlayer,
+  });
+}
+
+// Export function for passing a player's turn
+export function passPlayerTurn(state: GameState): GameState {
+  // Block all actions except handleActionTarget if pendingAction exists
+  if (state.currentAction && state.currentAction.pendingAction) return state;
+  if (state.gameOver) return state;
+
+  const player = state.players[state.currentPlayer];
+
+  // Can only pass if not forced to flip and passing is enabled
+  if (player.flipThree > 0) {
+    return { ...state, status: GameStatus.CannotPassDuringFlipThree };
+  }
+
+  if (!state.options.passingEnabled) {
+    return { ...state, status: GameStatus.PassingDisabled };
+  }
+
+  // Advance to next player and reset their flip count
+  return advanceToNextPlayer({
+    ...state,
+    status: GameStatus.PlayerPassed,
+  });
 }

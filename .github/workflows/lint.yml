@@ -1,4 +1,4 @@
-name: Lint
+name: Tests & Lint
 
 on:
   pull_request:
@@ -6,16 +6,51 @@ on:
     branches: [main]
 
 jobs:
-  lint:
+  test-and-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          
       - name: Install dependencies
         run: npm ci
+        
       - name: Run ESLint
         run: npx eslint src --ext .js,.jsx
+        
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+          
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const coverage = JSON.parse(fs.readFileSync('coverage-summary.json', 'utf8'));
+              const summary = coverage.summary || coverage;
+              const coveragePct = Math.round(summary.lines?.pct || 0);
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 📊 Test Coverage Report\n\n**Overall Coverage: ${coveragePct}%**\n\n- Lines: ${summary.lines?.pct || 0}%\n- Functions: ${summary.functions?.pct || 0}%\n- Branches: ${summary.branches?.pct || 0}%\n- Statements: ${summary.statements?.pct || 0}%`
+              });
+            } catch (error) {
+              console.log('Could not parse coverage summary:', error.message);
+            }

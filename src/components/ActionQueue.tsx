@@ -12,18 +12,10 @@ interface ActionQueueProps {
 }
 
 function ActionQueue({ actionCards, onActionUse }: ActionQueueProps) {
-  const handleActionUse = (card: CardType, idx: number) => {
-    if (onActionUse) onActionUse(card, idx);
-  };
-
   return (
     <div className="flex flex-row items-center mt-2" aria-label="Player's action cards">
       {actionCards.map((card, idx) => (
-        <button
-          key={idx}
-          className="focus:outline-none"
-          onClick={handleActionUse.bind(null, card, idx)}
-        >
+        <button key={idx} className="focus:outline-none" onClick={() => onActionUse?.(card, idx)}>
           <Card card={card} />
         </button>
       ))}

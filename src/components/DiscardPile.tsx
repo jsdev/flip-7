@@ -1,4 +1,3 @@
-import { JSX } from 'preact';
 import Card, { CardType } from './Card';
 
 export interface DiscardPileProps {

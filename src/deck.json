@@ -1,0 +1,45 @@
+{
+  "deckInfo": {
+    "game": "Flip 7",
+    "totalCards": 94
+  },
+  "cardDistribution": {
+    "numberCards": {
+      "total": 79,
+      "distribution": [
+        {"cardValue": "0", "count": 1},
+        {"cardValue": "1", "count": 1},
+        {"cardValue": "2", "count": 2},
+        {"cardValue": "3", "count": 3},
+        {"cardValue": "4", "count": 4},
+        {"cardValue": "5", "count": 5},
+        {"cardValue": "6", "count": 6},
+        {"cardValue": "7", "count": 7},
+        {"cardValue": "8", "count": 8},
+        {"cardValue": "9", "count": 9},
+        {"cardValue": "10", "count": 10},
+        {"cardValue": "11", "count": 11},
+        {"cardValue": "12", "count": 12}
+      ]
+    },
+    "actionCards": {
+      "total": 9,
+      "distribution": [
+        {"cardType": "Freeze", "count": 3},
+        {"cardType": "Flip Three", "count": 3},
+        {"cardType": "Second Chance", "count": 3}
+      ]
+    },
+    "bonusCards": {
+      "total": 6,
+      "distribution": [
+        {"cardType": "+2", "count": 1},
+        {"cardType": "+4", "count": 1},
+        {"cardType": "+6", "count": 1},
+        {"cardType": "+8", "count": 1},
+        {"cardType": "+10", "count": 1},
+        {"cardType": "2x", "count": 1}
+      ]
+    }
+  }
+}

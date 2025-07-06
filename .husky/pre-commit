@@ -1,4 +1,18 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+echo "🔍 Running pre-commit checks..."
+
+# Run linting
+echo "📝 Linting code..."
+npm run lint
+
+# Run unit tests
+echo "🧪 Running unit tests..."
 npm test
+
+# Optionally run visual regression tests (uncomment to enable)
+# echo "📸 Running visual regression tests..."
+# npm run test:visual
+
+echo "✅ All pre-commit checks passed!"

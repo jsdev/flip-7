@@ -1,0 +1,305 @@
+<svg viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define patterns and gradients -->
+  <defs>
+    <pattern id="featherPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 15 5 Q 18 12 15 20 Q 12 12 15 5" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+      <path d="M 8 8 Q 10 14 8 18 Q 6 14 8 8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="0.3"/>
+      <path d="M 22 12 Q 24 17 22 22 Q 20 17 22 12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="0.3"/>
+    </pattern>
+    
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F1C40F;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#F39C12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E67E22;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title Section -->
+  <rect x="20" y="20" width="400" height="50" fill="#3F51B5" rx="0"/>
+  <polygon points="420,20 470,45 420,70" fill="#3F51B5"/>
+  <text x="220" y="52" font-family="Arial Black, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">SCORE MODIFIER CARDS</text>
+
+  <!-- Score Modifier Cards Row -->
+  <g id="modifier-cards">
+    <!-- +2 Card -->
+    <rect x="50" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="58" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="65" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="65" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="145" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="162" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="65" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="65" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="145" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="162" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="110" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+2 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="110" y="200" font-family="Arial Black, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#E74C3C">+2</text>
+    
+    <!-- Bottom text -->
+    <text x="110" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+2 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Dot separator -->
+    <circle cx="200" cy="185" r="8" fill="#3F51B5"/>
+
+    <!-- +4 Card -->
+    <rect x="230" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="238" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="245" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="245" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="325" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="342" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="245" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="245" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="325" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="342" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="290" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+4 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="290" y="200" font-family="Arial Black, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#E74C3C">+4</text>
+    
+    <!-- Bottom text -->
+    <text x="290" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+4 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Dot separator -->
+    <circle cx="380" cy="185" r="8" fill="#3F51B5"/>
+
+    <!-- +6 Card -->
+    <rect x="410" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="418" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="425" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="425" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="505" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="522" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="425" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="425" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="505" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="522" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="470" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+6 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="470" y="200" font-family="Arial Black, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#E74C3C">+6</text>
+    
+    <!-- Bottom text -->
+    <text x="470" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+6 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Dot separator -->
+    <circle cx="560" cy="185" r="8" fill="#3F51B5"/>
+
+    <!-- +8 Card -->
+    <rect x="590" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="598" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="605" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="605" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="685" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="702" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="605" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="605" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="685" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="702" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="650" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+8 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="650" y="200" font-family="Arial Black, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#E74C3C">+8</text>
+    
+    <!-- Bottom text -->
+    <text x="650" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+8 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Dot separator -->
+    <circle cx="740" cy="185" r="8" fill="#3F51B5"/>
+
+    <!-- +10 Card -->
+    <rect x="770" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="778" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="785" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="785" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="865" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="882" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="785" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="785" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="865" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="882" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="830" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+10 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="830" y="200" font-family="Arial Black, sans-serif" font-size="54" font-weight="bold" text-anchor="middle" fill="#E74C3C">+10</text>
+    
+    <!-- Bottom text -->
+    <text x="830" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">+10 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Dot separator -->
+    <circle cx="920" cy="185" r="8" fill="#3F51B5"/>
+
+    <!-- x2 Card -->
+    <rect x="950" y="100" width="120" height="170" rx="10" fill="url(#goldGradient)" stroke="#B7950B" stroke-width="3"/>
+    <rect x="958" y="108" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="965" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="965" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="1045" y="115" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="1062" y="115" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="965" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="965" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    <rect x="1045" y="254" width="20" height="3" fill="#8B4513" rx="1"/>
+    <rect x="1062" y="237" width="3" height="20" fill="#8B4513" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="1010" y="140" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">x2 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Main symbol -->
+    <text x="1010" y="200" font-family="Arial Black, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#8E44AD">x2</text>
+    
+    <!-- Bottom text -->
+    <text x="1010" y="240" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#8B4513" font-weight="bold">x2 THE SUM OF YOUR NUMBER CARDS</text>
+    
+    <!-- Quantity indicator -->
+    <text x="1100" y="130" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold" fill="#3F51B5">x1</text>
+  </g>
+
+  <!-- Action Cards Title -->
+  <rect x="20" y="320" width="280" height="50" fill="#3F51B5" rx="0"/>
+  <polygon points="300,320 350,345 300,370" fill="#3F51B5"/>
+  <text x="160" y="352" font-family="Arial Black, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">ACTION CARDS</text>
+
+  <!-- Action Cards Row -->
+  <g id="action-cards">
+    <!-- FREEZE Card -->
+    <rect x="50" y="400" width="120" height="170" rx="10" fill="#4A90E2" stroke="#2E5F8A" stroke-width="3"/>
+    <rect x="58" y="408" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="65" y="415" width="20" height="3" fill="#2E5F8A" rx="1"/>
+    <rect x="65" y="415" width="3" height="20" fill="#2E5F8A" rx="1"/>
+    <rect x="145" y="415" width="20" height="3" fill="#2E5F8A" rx="1"/>
+    <rect x="162" y="415" width="3" height="20" fill="#2E5F8A" rx="1"/>
+    <rect x="65" y="554" width="20" height="3" fill="#2E5F8A" rx="1"/>
+    <rect x="65" y="537" width="3" height="20" fill="#2E5F8A" rx="1"/>
+    <rect x="145" y="554" width="20" height="3" fill="#2E5F8A" rx="1"/>
+    <rect x="162" y="537" width="3" height="20" fill="#2E5F8A" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="110" y="440" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#2E5F8A" font-weight="bold">PLAY ON AN ACTIVE PLAYER</text>
+    
+    <!-- Ribbon background for FREEZE -->
+    <path d="M 70 460 L 150 460 L 145 475 L 150 490 L 70 490 L 75 475 Z" fill="#1ABC9C" stroke="#16A085" stroke-width="2"/>
+    
+    <!-- FREEZE text -->
+    <text x="110" y="480" font-family="Arial Black, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">FREEZE</text>
+    
+    <!-- Ice crystal icon -->
+    <g transform="translate(110, 520)">
+      <path d="M 0 -12 L 0 12 M -10 -6 L 10 6 M -10 6 L 10 -6" stroke="#B3E5FC" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="6" fill="none" stroke="#B3E5FC" stroke-width="1"/>
+    </g>
+    
+    <!-- Bottom text -->
+    <text x="110" y="545" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#2E5F8A" font-weight="bold">PLAY ON AN ACTIVE PLAYER</text>
+    
+    <!-- Quantity indicator -->
+    <text x="185" y="430" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold" fill="#3F51B5">x3</text>
+
+    <!-- FLIP THREE Card -->
+    <rect x="230" y="400" width="120" height="170" rx="10" fill="#F1C40F" stroke="#D4AC0D" stroke-width="3"/>
+    <rect x="238" y="408" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="245" y="415" width="20" height="3" fill="#D4AC0D" rx="1"/>
+    <rect x="245" y="415" width="3" height="20" fill="#D4AC0D" rx="1"/>
+    <rect x="325" y="415" width="20" height="3" fill="#D4AC0D" rx="1"/>
+    <rect x="342" y="415" width="3" height="20" fill="#D4AC0D" rx="1"/>
+    <rect x="245" y="554" width="20" height="3" fill="#D4AC0D" rx="1"/>
+    <rect x="245" y="537" width="3" height="20" fill="#D4AC0D" rx="1"/>
+    <rect x="325" y="554" width="20" height="3" fill="#D4AC0D" rx="1"/>
+    <rect x="342" y="537" width="3" height="20" fill="#D4AC0D" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="290" y="440" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#D4AC0D" font-weight="bold">PRESS YOUR LUCK!</text>
+    
+    <!-- Ribbon background for FLIP THREE -->
+    <path d="M 250 460 L 330 460 L 325 470 L 330 480 L 325 490 L 330 500 L 250 500 L 255 490 L 250 480 L 255 470 Z" fill="#E67E22" stroke="#D35400" stroke-width="2"/>
+    
+    <!-- FLIP text -->
+    <text x="290" y="475" font-family="Arial Black, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">FLIP</text>
+    <!-- THREE text -->
+    <text x="290" y="495" font-family="Arial Black, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">THREE</text>
+    
+    <!-- Card flip icons -->
+    <g transform="translate(290, 525)">
+      <rect x="-8" y="-6" width="5" height="8" fill="#E67E22" stroke="#D35400" stroke-width="1" rx="1"/>
+      <rect x="-1" y="-6" width="5" height="8" fill="#E67E22" stroke="#D35400" stroke-width="1" rx="1"/>
+      <rect x="6" y="-6" width="5" height="8" fill="#E67E22" stroke="#D35400" stroke-width="1" rx="1"/>
+    </g>
+    
+    <!-- Bottom text -->
+    <text x="290" y="545" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#D4AC0D" font-weight="bold">RACE TO 700!</text>
+    
+    <!-- Quantity indicator -->
+    <text x="365" y="430" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold" fill="#3F51B5">x3</text>
+
+    <!-- SECOND CHANCE Card -->
+    <rect x="410" y="400" width="120" height="170" rx="10" fill="#E74C3C" stroke="#A93226" stroke-width="3"/>
+    <rect x="418" y="408" width="104" height="154" rx="8" fill="url(#featherPattern)" stroke="white" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Decorative corners -->
+    <rect x="425" y="415" width="20" height="3" fill="#A93226" rx="1"/>
+    <rect x="425" y="415" width="3" height="20" fill="#A93226" rx="1"/>
+    <rect x="505" y="415" width="20" height="3" fill="#A93226" rx="1"/>
+    <rect x="522" y="415" width="3" height="20" fill="#A93226" rx="1"/>
+    <rect x="425" y="554" width="20" height="3" fill="#A93226" rx="1"/>
+    <rect x="425" y="537" width="3" height="20" fill="#A93226" rx="1"/>
+    <rect x="505" y="554" width="20" height="3" fill="#A93226" rx="1"/>
+    <rect x="522" y="537" width="3" height="20" fill="#A93226" rx="1"/>
+    
+    <!-- Top text -->
+    <text x="470" y="440" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#A93226" font-weight="bold">SCORE WITH EXTRA CARDS</text>
+    
+    <!-- Ribbon background for SECOND CHANCE -->
+    <path d="M 430 460 L 510 460 L 505 470 L 510 480 L 505 490 L 510 500 L 430 500 L 435 490 L 430 480 L 435 470 Z" fill="#9B59B6" stroke="#7D3C98" stroke-width="2"/>
+    
+    <!-- SECOND text -->
+    <text x="470" y="475" font-family="Arial Black, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="white">SECOND</text>
+    <!-- CHANCE text -->
+    <text x="470" y="495" font-family="Arial Black, sans-serif" font-size="11" font-weight="bold" text-anchor="middle" fill="white">CHANCE</text>
+    
+    <!-- Heart icon -->
+    <g transform="translate(470, 525)">
+      <path d="M 0 3 C -8 -5 -20 -5 -20 5 C -20 12 0 20 0 20 C 0 20 20 12 20 5 C 20 -5 8 -5 0 3 Z" fill="#FF6B9D" stroke="#E91E63" stroke-width="1"/>
+    </g>
+    
+    <!-- Bottom text -->
+    <text x="470" y="545" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#A93226" font-weight="bold">SCORE WITH EXTRA CARDS</text>
+    
+    <!-- Quantity indicator -->
+    <text x="545" y="430" font-family="Arial Black, sans-serif" font-size="18" font-weight="bold" fill="#3F51B5">x3</text>
+  </g>
+
+  <!-- Recommendation box -->
+  <rect x="750" y="400" width="300" height="120" fill="#B0E0E6" stroke="#5F9EA0" stroke-width="2" rx="10"/>
+  <text x="900" y="425" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#2F4F4F" font-style="italic">If playing with more</text>
+  <text x="900" y="445" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#2F4F4F" font-style="italic">than 18 people, we</text>
+  <text x="900" y="465" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#2F4F4F" font-style="italic">recommend playing</text>
+  <text x="900" y="485" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#2F4F4F" font-style="italic">with a second deck.</text>
+
+</svg>

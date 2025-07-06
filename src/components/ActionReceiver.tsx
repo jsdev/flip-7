@@ -1,5 +1,3 @@
-import { JSX } from 'preact';
-
 export interface ActionReceiverProps {
   isActive: boolean;
   onReceive: () => void;

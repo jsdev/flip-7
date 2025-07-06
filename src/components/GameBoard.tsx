@@ -1,11 +1,13 @@
-import { useState } from 'preact/hooks';
+import { useState, useCallback } from 'preact/hooks';
 import { generateDeck, shuffleDeck, dealCard } from '../lib/deck';
-import { CardType } from '../types';
-import PlayerComposition from './PlayerComposition';
+import { getFinalScore, celebrateFlip7 } from '../lib/gameLogic.helpers';
+import { CardType, RoundPlayerData } from '../types';
+import PlayerList from './PlayerList';
 import FlipStack from './FlipStack';
 import DiscardPile from './DiscardPile';
-import Controls from './Controls';
-import CurrentScore from './CurrentScore';
+import NumberCardsContainer from './NumberCardsContainer';
+import CardShowcase from './CardShowcase';
+import RoundHistoryTable from './RoundHistoryTable';
 import { ScenarioExplanation as SecondChanceExplanation } from '../scenario/second-chance';
 import { ScenarioExplanation as DrawThreeExplanation } from '../scenario/draw-three';
 import { ScenarioExplanation as NestedDrawThreeExplanation } from '../scenario/nested-draw-three';
@@ -14,17 +16,39 @@ import { ScenarioExplanation as SecondChanceRedeemedExplanation } from '../scena
 
 const PLAYER_COUNT = 4;
 
+interface FlipThreeState {
+  originalPlayer: number;
+  target: number;
+  flipsRemaining: number;
+}
+
+interface PendingAction {
+  type: 'freeze' | 'flip-three';
+  card: CardType;
+  validTargets: number[];
+  actingPlayer: number;
+}
+
+interface ActionContext {
+  flipThreeState?: FlipThreeState | null;
+  flipsRemaining?: number;
+  pendingAction?: PendingAction;
+  parent?: ActionContext;
+}
+
 interface Player {
   name: string;
   score: number;
   numberCards: CardType[];
   modifiers: CardType[];
+  actionCards: CardType[];
   secondChance: boolean;
   busted: boolean;
   banked: boolean;
   isDealer: boolean;
   isActive: boolean;
   flipThree: number;
+  bustedRoundPoints: number;
 }
 
 function createInitialPlayers(): Player[] {
@@ -33,12 +57,14 @@ function createInitialPlayers(): Player[] {
     score: 0,
     numberCards: [],
     modifiers: [],
+    actionCards: [],
     secondChance: false,
     busted: false,
     banked: false,
     isDealer: i === 0,
     isActive: i === 0,
     flipThree: 0,
+    bustedRoundPoints: 0,
   }));
 }
 
@@ -61,27 +87,19 @@ interface ActionLogEntry {
   flipThreeStep?: number;
 }
 
-function getLuckiestFlipper(actionLog: ActionLogEntry[]): string[] {
-  let minOdds = 1;
-  let luckiest: string[] = [];
-  actionLog.forEach((log) => {
-    if (log.action === 'draw' && log.result === 'safe' && log.odds !== undefined) {
-      if (log.odds < minOdds) {
-        minOdds = log.odds;
-        luckiest = [String(log.player)];
-      } else if (log.odds === minOdds) {
-        if (!luckiest.includes(String(log.player))) luckiest.push(String(log.player));
-      }
-    }
-  });
-  return luckiest;
-}
+// Helper function to capture round data for round history
+const captureRoundData = (currentPlayers: Player[]): RoundPlayerData[] =>
+  currentPlayers.map((player) => ({
+    name: player.name,
+    pointsBanked: player.banked ? getFinalScore(player) : 0,
+    pointsLost: player.busted ? player.bustedRoundPoints : 0,
+  }));
 
 // Add a stack to manage nested action contexts
 export default function GameBoard() {
   const [deck, setDeck] = useState(() => {
-    const d = generateDeck(null);
-    return shuffleDeck(d, Math.random, null);
+    const d = generateDeck();
+    return shuffleDeck(d, Math.random);
   });
   const [discard, setDiscard] = useState<CardType[]>([]);
   const [players, setPlayers] = useState<Player[]>(createInitialPlayers());
@@ -90,40 +108,32 @@ export default function GameBoard() {
   const [status, setStatus] = useState('Game start!');
   const [actionLog, setActionLog] = useState<ActionLogEntry[]>([]);
   const [gameOver, setGameOver] = useState(false);
-  const [flipThreeState, setFlipThreeState] = useState<null | {
-    originalPlayer: number;
-    target: number;
-    flipsRemaining: number;
-  }>(null);
-  const [pendingAction, setPendingAction] = useState<null | {
-    type: 'freeze' | 'flip-three';
-    card: CardType;
-    validTargets: number[];
-  }>(null);
-  const [actionStack, setActionStack] = useState<any[]>([]); // Stack of action contexts
-  const [currentAction, setCurrentAction] = useState<null | any>(null); // Top of stack
+  const [roundHistory, setRoundHistory] = useState<RoundPlayerData[][]>([]);
+  const [eliminatedByFlip7, setEliminatedByFlip7] = useState<
+    {
+      readonly playerName: string;
+      readonly potentialScore: number;
+    }[]
+  >([]);
+  const [currentAction, setCurrentAction] = useState<ActionContext | null>(null); // Top of stack
+  const [showCardShowcase, setShowCardShowcase] = useState(false);
 
   // Helper to push a new action context
-  function pushActionContext(ctx: any) {
-    setActionStack((stack) => [ctx, ...stack]);
+  function pushActionContext(ctx: ActionContext) {
     setCurrentAction(ctx);
   }
   // Helper to pop and resume previous context
   function popActionContext() {
-    setActionStack((stack) => {
-      const [, ...rest] = stack;
-      setCurrentAction(rest[0] || null);
-      return rest;
-    });
+    setCurrentAction(null);
   }
 
   // Handler: Flip a card
-  function handleFlip() {
+  const handleFlip = useCallback(() => {
     if (gameOver || (currentAction && currentAction.pendingAction)) return;
-    const ctx = currentAction || {};
+    const ctx = (currentAction || {}) as ActionContext;
     const isFlipThree = !!ctx.flipThreeState;
-    const actingPlayer = isFlipThree ? ctx.flipThreeState.target : currentPlayer;
-    const [card, newDeck] = dealCard(deck, null);
+    const actingPlayer = isFlipThree ? ctx.flipThreeState!.target : currentPlayer;
+    const [card, newDeck] = dealCard(deck);
     if (!card) {
       setStatus('Deck is empty!');
       return;
@@ -140,6 +150,12 @@ export default function GameBoard() {
     }
     if (card.type === 'number') {
       if (player.numberCards.some((c) => c.value === card.value)) {
+        // Calculate what the player would have scored if they banked before this card
+        const potentialScore = getFinalScore({
+          ...player,
+          numberCards: player.numberCards, // Don't include the busting card
+        });
+        player.bustedRoundPoints = potentialScore;
         player.busted = true;
         result = 'bust';
         setStatus(`Busted! Drew another ${card.value}`);
@@ -169,6 +185,67 @@ export default function GameBoard() {
         return;
       }
       player.numberCards = [...player.numberCards, card];
+
+      // Check for Flip 7 bonus
+      const uniqueNumbers = new Set(player.numberCards.map((c) => c.value));
+      if (player.numberCards.length === 7 && uniqueNumbers.size === 7) {
+        // Trigger Flip 7 bonus and end the game
+        const roundScore = getFinalScore(player, 15); // 15 is the Flip 7 bonus
+        player.score += roundScore;
+        player.numberCards = [];
+        player.modifiers = [];
+        player.banked = true;
+
+        // Track eliminated players
+        const eliminated = newPlayers
+          .filter(
+            (p, idx) =>
+              idx !== actingPlayer &&
+              !p.banked &&
+              !p.busted &&
+              (p.numberCards.length > 0 || p.modifiers.length > 0),
+          )
+          .map((p) => ({
+            playerName: p.name,
+            potentialScore: getFinalScore(p, 0),
+          }));
+
+        // Clear all other players' cards (they are eliminated)
+        newPlayers.forEach((p, idx) => {
+          if (idx !== actingPlayer && !p.banked && !p.busted) {
+            p.numberCards = [];
+            p.modifiers = [];
+          }
+        });
+
+        newPlayers[actingPlayer] = player;
+        setPlayers(newPlayers);
+        setEliminatedByFlip7(eliminated);
+        setGameOver(true);
+        setStatus(`🎉 ${player.name} achieved FLIP 7! Game over!`);
+
+        // Trigger confetti
+        try {
+          celebrateFlip7();
+        } catch (e) {
+          // Ignore confetti errors
+        }
+
+        setActionLog([
+          ...actionLog,
+          {
+            round,
+            player: actingPlayer,
+            card,
+            result: 'flip-7-bonus',
+            odds,
+            action: isFlipThree ? 'flip-three-flip' : 'draw',
+            flipThreeStep: isFlipThree ? 4 - (ctx.flipThreeState?.flipsRemaining ?? 0) : undefined,
+          },
+        ]);
+        return;
+      }
+
       result = 'safe';
     } else if (card.type === 'modifier') {
       player.modifiers = [...player.modifiers, card];
@@ -253,7 +330,7 @@ export default function GameBoard() {
     ]);
     // If in Flip Three, decrement flipsRemaining or pop context
     if (isFlipThree) {
-      if (ctx.flipThreeState?.flipsRemaining > 1) {
+      if (ctx.flipThreeState && ctx.flipThreeState.flipsRemaining > 1) {
         setCurrentAction({
           ...ctx,
           flipThreeState: {
@@ -268,130 +345,206 @@ export default function GameBoard() {
       return;
     }
     setDeck(newDeck);
-  }
+  }, [currentAction, gameOver, deck, players, currentPlayer, discard, actionLog, round]);
 
   // Handler: Resolve pending action (Freeze or Flip Three)
-  function handleActionTarget(targetIdx: number) {
-    if (!currentAction || !currentAction.pendingAction) return;
-    const { type, card, actingPlayer } = currentAction.pendingAction;
-    const newPlayers = [...players];
-    if (type === 'freeze') {
-      // Force target to bank
-      let roundScore = newPlayers[targetIdx].numberCards.reduce(
-        (sum, c) => sum + Number(c.value),
-        0,
-      );
-      for (const mod of newPlayers[targetIdx].modifiers) {
-        if (typeof mod.value === 'number') roundScore += mod.value;
+  const handleActionTarget = useCallback(
+    (targetIdx: number) => {
+      if (!currentAction || !currentAction.pendingAction) return;
+      const { type, card, actingPlayer } = currentAction.pendingAction;
+      const newPlayers = [...players];
+      if (type === 'freeze') {
+        // Force target to bank using proper scoring
+        const roundScore = getFinalScore(newPlayers[targetIdx]);
+        newPlayers[targetIdx] = {
+          ...newPlayers[targetIdx],
+          score: newPlayers[targetIdx].score + roundScore,
+          numberCards: [],
+          modifiers: [],
+          banked: true,
+          busted: false,
+        };
+        setPlayers(newPlayers);
+        setStatus(`${newPlayers[targetIdx].name} was frozen and banked ${roundScore} points!`);
+        setActionLog([
+          ...actionLog,
+          {
+            round,
+            player: actingPlayer,
+            card,
+            result: 'froze',
+            action: 'freeze',
+            target: targetIdx,
+            banked: roundScore,
+          },
+        ]);
+        setDiscard([...discard, card]);
+        popActionContext();
+      } else if (type === 'flip-three') {
+        setCurrentAction({
+          flipThreeState: {
+            originalPlayer: actingPlayer,
+            target: targetIdx,
+            flipsRemaining: 3,
+          },
+          parent: currentAction,
+        });
+        setStatus(`${newPlayers[targetIdx].name} must flip three cards!`);
+        setActionLog([
+          ...actionLog,
+          {
+            round,
+            player: actingPlayer,
+            card,
+            result: 'flip-three',
+            action: 'flip-three',
+            target: targetIdx,
+          },
+        ]);
+        setDiscard([...discard, card]);
       }
-      newPlayers[targetIdx] = {
-        ...newPlayers[targetIdx],
-        score: newPlayers[targetIdx].score + roundScore,
-        numberCards: [],
-        modifiers: [],
-        banked: true,
-        busted: false,
-      };
-      setPlayers(newPlayers);
-      setStatus(`${newPlayers[targetIdx].name} was frozen and banked ${roundScore} points!`);
-      setActionLog([
-        ...actionLog,
-        {
-          round,
-          player: actingPlayer,
-          card,
-          result: 'froze',
-          action: 'freeze',
-          target: targetIdx,
-          banked: roundScore,
-        },
-      ]);
-      setDiscard([...discard, card]);
-      popActionContext();
-    } else if (type === 'flip-three') {
-      setCurrentAction({
-        flipThreeState: {
-          originalPlayer: actingPlayer,
-          target: targetIdx,
-          flipsRemaining: 3,
-        },
-        parent: currentAction,
-      });
-      setStatus(`${newPlayers[targetIdx].name} must flip three cards!`);
-      setActionLog([
-        ...actionLog,
-        {
-          round,
-          player: actingPlayer,
-          card,
-          result: 'flip-three',
-          action: 'flip-three',
-          target: targetIdx,
-        },
-      ]);
-      setDiscard([...discard, card]);
-    }
-  }
+    },
+    [currentAction, players, actionLog, round, discard],
+  );
 
   // Helper: Advance to next player's turn
-  function advanceTurn(updatedPlayers: Player[]) {
-    let next = currentPlayer;
-    let found = false;
-    for (let i = 1; i <= updatedPlayers.length; i++) {
-      const idx = (currentPlayer + i) % updatedPlayers.length;
-      if (!updatedPlayers[idx].busted && !updatedPlayers[idx].banked) {
-        next = idx;
-        found = true;
-        break;
+  const advanceTurn = useCallback(
+    (updatedPlayers: Player[]) => {
+      let next = currentPlayer;
+      let found = false;
+      for (let i = 1; i <= updatedPlayers.length; i++) {
+        const idx = (currentPlayer + i) % updatedPlayers.length;
+        if (!updatedPlayers[idx].busted && !updatedPlayers[idx].banked) {
+          next = idx;
+          found = true;
+          break;
+        }
       }
-    }
-    if (!found) {
-      setStatus('All players finished!');
-      setGameOver(true);
-      return;
-    }
-    setCurrentPlayer(next);
-    setStatus(`${updatedPlayers[next].name}'s turn`);
-  }
+      if (!found) {
+        // Round is over! Capture round data
+        const currentRoundData = captureRoundData(updatedPlayers);
+        setRoundHistory((prev) => [...prev, currentRoundData]);
+
+        // Check if anyone is still in the game (not eliminated by multiple busts)
+        const playersStillInGame = updatedPlayers.filter((p) => !p.busted || p.banked);
+
+        if (playersStillInGame.length <= 1) {
+          // Game over - only one player left or no one left
+          setStatus('Game Over!');
+          setGameOver(true);
+        } else {
+          // Start new round - reset player states but keep scores
+          const newRoundPlayers = updatedPlayers.map((player) => ({
+            ...player,
+            numberCards: [],
+            modifiers: [],
+            actionCards: [],
+            busted: false,
+            banked: false,
+            isActive: player.isDealer, // Dealer starts next round
+            flipThree: 0,
+            bustedRoundPoints: 0,
+          }));
+
+          setPlayers(newRoundPlayers);
+          setCurrentPlayer(newRoundPlayers.findIndex((p) => p.isDealer));
+          setRound((prev) => prev + 1);
+          setStatus(
+            `Round ${round + 1} begins! ${newRoundPlayers.find((p) => p.isDealer)?.name}'s turn`,
+          );
+
+          // Reset deck for new round
+          setDeck(() => {
+            const d = generateDeck();
+            return shuffleDeck(d, Math.random);
+          });
+          setDiscard([]);
+        }
+        return;
+      }
+      setCurrentPlayer(next);
+      setStatus(`${updatedPlayers[next].name}'s turn`);
+    },
+    [currentPlayer],
+  );
 
   // Handler: Bank score
-  function handleBank() {
+  const handleBank = useCallback(() => {
     if (gameOver) return;
     const newPlayers = [...players];
     const player = { ...newPlayers[currentPlayer] };
-    // Calculate round score
-    let roundScore = player.numberCards.reduce((sum, c) => sum + Number(c.value), 0);
-    // Apply modifiers (additive only for now)
-    for (const mod of player.modifiers) {
-      if (typeof mod.value === 'number') roundScore += mod.value;
-      // TODO: handle X2 and other modifiers
-    }
+
+    // Check for Flip 7 bonus before banking
+    const uniqueNumbers = new Set(player.numberCards.map((c) => c.value));
+    const hasFlip7 = player.numberCards.length === 7 && uniqueNumbers.size === 7;
+
+    // Calculate round score using proper scoring logic
+    const flip7Bonus = hasFlip7 ? 15 : 0;
+    const roundScore = getFinalScore(player, flip7Bonus);
     player.score += roundScore;
     player.numberCards = [];
     player.modifiers = [];
     player.banked = true;
     player.busted = false;
     newPlayers[currentPlayer] = player;
+
+    if (hasFlip7) {
+      // Flip 7 bonus ends the game immediately
+      // Track eliminated players
+      const eliminated = newPlayers
+        .filter(
+          (p, idx) =>
+            idx !== currentPlayer &&
+            !p.banked &&
+            !p.busted &&
+            (p.numberCards.length > 0 || p.modifiers.length > 0),
+        )
+        .map((p) => ({
+          playerName: p.name,
+          potentialScore: getFinalScore(p, 0),
+        }));
+
+      // Clear all other players' cards (they are eliminated)
+      newPlayers.forEach((p, idx) => {
+        if (idx !== currentPlayer && !p.banked && !p.busted) {
+          p.numberCards = [];
+          p.modifiers = [];
+        }
+      });
+
+      setEliminatedByFlip7(eliminated);
+      setGameOver(true);
+      setStatus(`🎉 ${player.name} achieved FLIP 7! Game over!`);
+
+      // Trigger confetti
+      try {
+        celebrateFlip7();
+      } catch (e) {
+        // Ignore confetti errors
+      }
+    } else {
+      setStatus(`${player.name} banked ${roundScore} points!`);
+      advanceTurn(newPlayers);
+    }
+
     setPlayers(newPlayers);
-    setStatus(`${player.name} banked ${roundScore} points!`);
     setActionLog([
       ...actionLog,
       {
         round,
         player: currentPlayer,
         card: { type: 'number', value: roundScore, label: String(roundScore) },
-        result: 'banked',
+        result: hasFlip7 ? 'flip-7-banked' : 'banked',
         action: 'bank',
       },
     ]);
-    advanceTurn(newPlayers);
-  }
+  }, [gameOver, players, currentPlayer, actionLog, round]);
 
   // Handler: New Game
-  function handleNewGame() {
+  const handleNewGame = useCallback(() => {
     setDeck(() => {
-      const d = generateDeck(null);
-      return shuffleDeck(d, Math.random, null);
+      const d = generateDeck();
+      return shuffleDeck(d, Math.random);
     });
     setDiscard([]);
     setPlayers(createInitialPlayers());
@@ -400,107 +553,183 @@ export default function GameBoard() {
     setStatus('New game started!');
     setActionLog([]);
     setGameOver(false);
-  }
+    setRoundHistory([]);
+    setEliminatedByFlip7([]);
+  }, []);
 
   // TODO: Add logic to check for game over and update setGameOver(true)
 
-  // Layout positions and rotations for 4 players
-  const playerPositions = [
-    { position: 'bottom', rotation: 0, className: 'left-1/2 bottom-0 -translate-x-1/2' },
-    { position: 'right', rotation: -90, className: 'right-0 top-1/2 -translate-y-1/2' },
-    { position: 'top', rotation: -180, className: 'left-1/2 top-0 -translate-x-1/2' },
-    { position: 'left', rotation: -270, className: 'left-0 top-1/2 -translate-y-1/2' },
-  ];
-  const rotatedPlayers = players.map((_, i) => players[(currentPlayer + i) % 4]);
-  const playerNames = players.map((p) => p.name);
-  const scores = players.map((p) => p.score);
-  // Calculate current round score for BANK button
-  const currentRoundScore =
-    players[currentPlayer].numberCards.reduce((sum, c) => sum + Number(c.value), 0) +
-    players[currentPlayer].modifiers.reduce(
-      (sum, m) => (typeof m.value === 'number' ? sum + m.value : sum),
-      0,
-    );
+  // Calculate current round score for BANK button using proper scoring logic
+  const currentRoundScore = getFinalScore(players[currentPlayer]);
   const canBank =
     !gameOver &&
-    !pendingAction &&
-    !flipThreeState &&
+    !currentAction?.pendingAction &&
     currentRoundScore > 0 &&
     !players[currentPlayer].busted &&
     !players[currentPlayer].banked;
 
+  // Prepare action prompt for PlayerList
+  const actionPrompt = currentAction?.pendingAction
+    ? {
+        type: currentAction.pendingAction.type,
+        validTargets: currentAction.pendingAction.validTargets,
+      }
+    : undefined;
+
   return (
-    <div className="fixed inset-0 min-h-screen w-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center overflow-hidden">
-      {/* TallyBoard (top left) - show only at end of game or on demand */}
-      {/* <div className="fixed top-4 left-4 z-40"><TallyBoard ... /></div> */}
-      {/* CurrentScore (top left) */}
-      <div className="fixed top-4 left-4 z-30">
-        <CurrentScore scores={scores} playerNames={playerNames} />
-      </div>
-      {/* New Game (top right) */}
-      <div className="fixed top-4 right-4 z-30">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded shadow" onClick={handleNewGame}>
-          New Game
-        </button>
-      </div>
-      {/* InfoPanel (bottom left) */}
-      <div className="fixed bottom-4 left-4 z-30">
-        <div className="bg-white/80 rounded shadow p-3 min-w-[200px] text-sm" aria-live="polite">
-          {status}
+    <div
+      className="w-screen h-screen bg-gradient-to-br from-green-100 to-blue-100 overflow-hidden relative"
+      data-testid="game-board"
+    >
+      {/* Top Left - Current Scores */}
+      <div className="absolute top-8 left-8 z-30 w-80">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4">
+          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3">
+            Scores
+          </h3>
+          <div className="space-y-2">
+            {players.map((player, index) => (
+              <div
+                key={player.name}
+                className={`flex justify-between items-center p-2 rounded ${
+                  index === currentPlayer ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50'
+                }`}
+              >
+                <span
+                  className={`text-sm font-medium ${
+                    index === currentPlayer ? 'text-blue-700' : 'text-gray-700'
+                  }`}
+                >
+                  {player.name}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-green-700">{player.score}</span>
+                  {player.banked && (
+                    <span className="text-xs bg-green-100 text-green-800 px-1 rounded">B</span>
+                  )}
+                  {player.busted && (
+                    <span className="text-xs bg-red-100 text-red-800 px-1 rounded">X</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      {/* BANK (bottom right) */}
-      <div className="fixed bottom-4 right-4 z-30">
-        {canBank && (
-          <button
-            className="bg-green-600 text-white px-6 py-3 rounded shadow text-lg font-bold flex flex-col items-center"
-            onClick={handleBank}
-            disabled={!canBank}
-            style={{ display: canBank ? undefined : 'none' }}
-          >
-            BANK
-            <span className="text-xs font-normal mt-1">+{currentRoundScore} pts</span>
-          </button>
+
+        {/* Round History Table */}
+        {roundHistory.length > 0 && (
+          <div className="mt-4">
+            <RoundHistoryTable
+              roundHistory={roundHistory}
+              playerNames={players.map((p) => p.name)}
+            />
+          </div>
         )}
       </div>
-      {/* Discard pile to the left of FlipStack */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-[180%] -translate-y-1/2 z-10">
-        <DiscardPile cards={discard} />
+
+      {/* Top Right - Player List */}
+      <div className="absolute top-8 right-8 z-30 w-96">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4">
+          <PlayerList
+            players={players}
+            currentPlayerIndex={currentPlayer}
+            onActionTarget={handleActionTarget}
+            actionPrompt={actionPrompt}
+            eliminatedByFlip7={eliminatedByFlip7}
+          />
+        </div>
       </div>
-      {/* FlipStack in the center */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-        <FlipStack
-          onFlip={handleFlip}
-          isCurrent={!pendingAction && !gameOver && !flipThreeState}
-          disabled={!!pendingAction || !!gameOver || !!flipThreeState}
-        />
-      </div>
-      {/* Player panels anchored to each side */}
-      {rotatedPlayers.map((p, idx) => (
-        <div
-          key={idx}
-          className={`fixed z-20 ${playerPositions[idx].className}`}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div style={{ pointerEvents: 'auto' }}>
-            <PlayerComposition
-              player={p}
-              position={playerPositions[idx].position as any}
-              rotation={playerPositions[idx].rotation}
-              isCurrent={idx === 0}
-              actionPrompt={
-                pendingAction && pendingAction.validTargets.includes((currentPlayer + idx) % 4)
-                  ? {
-                      enabled: true,
-                      onReceive: () => handleActionTarget((currentPlayer + idx) % 4),
-                      label: pendingAction.type === 'freeze' ? 'Freeze' : 'Flip 3',
-                    }
-                  : undefined
-              }
+
+      {/* Center - FlipStack and Discard */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="flex items-center space-x-32">
+          {/* Discard Pile */}
+          <div>
+            <DiscardPile cards={discard} />
+          </div>
+
+          {/* FlipStack */}
+          <div>
+            <FlipStack
+              onFlip={handleFlip}
+              isCurrent={!currentAction?.pendingAction && !gameOver}
+              disabled={!!currentAction?.pendingAction || !!gameOver}
+              deckCount={deck.length}
             />
           </div>
         </div>
-      ))}
+      </div>
+
+      {/* Bottom - Current Player's Cards */}
+      <div className="absolute bottom-8 left-0 right-0 z-30 px-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mx-auto max-w-none">
+          {/* Player Name & Status */}
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">{players[currentPlayer].name}</h2>
+            <div className="text-sm text-gray-600">Score: {players[currentPlayer].score} pts</div>
+          </div>
+
+          {/* Number Cards with fan effect */}
+          <div className="mb-6 flex justify-center">
+            <NumberCardsContainer
+              cards={players[currentPlayer].numberCards}
+              secondChance={players[currentPlayer].secondChance}
+            />
+          </div>
+
+          {/* Action Controls */}
+          <div className="flex items-center justify-center space-x-6">
+            {canBank && (
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg shadow-lg text-lg font-bold transition-all duration-200 flex flex-col items-center"
+                onClick={handleBank}
+              >
+                BANK
+                <span className="text-sm font-normal mt-1">+{currentRoundScore} pts</span>
+              </button>
+            )}
+
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow transition-colors"
+              onClick={handleNewGame}
+            >
+              New Game
+            </button>
+
+            <button
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg shadow transition-colors"
+              onClick={() => setShowCardShowcase(true)}
+            >
+              View Cards
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Message - Top Center */}
+      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-30">
+        <div
+          className="bg-white/90 backdrop-blur-sm rounded-lg shadow px-6 py-3"
+          aria-live="polite"
+        >
+          <span className="text-sm text-gray-700 font-medium">{status}</span>
+        </div>
+      </div>
+
+      {/* Game Info - Bottom Right */}
+      <div className="absolute bottom-8 right-8 z-30">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 text-sm text-gray-600">
+          <div>Round: {round}</div>
+          <div>Cards left: {deck.length}</div>
+          <div>Discard: {discard.length}</div>
+          {gameOver && (
+            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+              <div className="font-semibold text-yellow-800">Game Over!</div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Scenario explanations overlay */}
       {status === 'Second Chance acquired!' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -527,6 +756,9 @@ export default function GameBoard() {
           <SecondChanceRedeemedExplanation />
         </div>
       )}
+
+      {/* Card Showcase Dialog */}
+      <CardShowcase isOpen={showCardShowcase} onClose={() => setShowCardShowcase(false)} />
     </div>
   );
 }

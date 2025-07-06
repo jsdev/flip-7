@@ -1,67 +1,196 @@
-# Flip 7 Web Game (Preact + Tailwind Modular)
+# Flip 7 - Pure Functional Card Game
 
-## Accessibility & CI
+[![Tests](https://github.com/username/flip-7/actions/workflows/lint.yml/badge.svg)](https://github.com/username/flip-7/actions/workflows/lint.yml)
+[![Visual Regression](https://github.com/username/flip-7/actions/workflows/visual-regression.yml/badge.svg)](https://github.com/username/flip-7/actions/workflows/visual-regression.yml)
+[![Coverage](https://img.shields.io/badge/coverage-30%25-orange.svg)](./coverage)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-- [x] Axe Linter GitHub Action (Vite/Preact)
-- [x] Lighthouse CI GitHub Action (Vite/Preact)
-- [x] ESLint + Prettier + Husky pre-commit (Vite/Preact)
+A modern, accessible card game built with pure functional programming principles. Features both web UI (Preact + Tailwind) and CLI implementations powered by the same immutable game logic.
 
-## Project Structure
+## 🎮 Game Overview
 
-- [x] Preact + Vite + Tailwind scaffold (modern, modular setup)
-- [x] Modular Deck logic in `src/lib/deck.ts` (dumb, data-only, Flip 7 rules)
-- [x] Main GameBoard component in `src/components/GameBoard.tsx` (handles state, turn, log)
-- [x] Card component in `src/components/Card.tsx` (dumb, accessible, styled)
-- [x] PlayerHand, ActionQueue, InfoPanel components (modular, UI-focused)
-- [x] Controls component (Flip, Bank, New Game)
-- [ ] TallyBoard component (end-of-game stats, superlatives)
-- [x] Design and instructions markdown files
-- [x] Settings file for configuration
-- [ ] Responsive, accessible UI polish
+Flip 7 is a strategic card game where players draw number cards (1-10) and modifiers (+2, +4, +6, +8, +10, x2) while managing risk vs reward. Players must bank their scores before busting (drawing a duplicate number) or lose their round points.
 
-## Game Logic
+**Key Features:**
+- **Pure Functional Logic:** Immutable game state, no side effects
+- **Cross-Platform:** Same logic powers web UI and CLI
+- **Accessibility:** ARIA-compliant, keyboard navigation
+- **Visual Regression Testing:** Automated UI consistency checks
+- **Round History:** Track performance across multiple rounds
 
-- [x] Support for 4 players, rotating turns
-- [x] Each player has their own hand and score
-- [x] Game state, round, and turn management
-- [x] Action log for superlatives and stats
-- [ ] Full action card resolution:
-  - [x] Freeze
-  - [ ] Flip Three
-  - [ ] Second Chance
-- [ ] Game ends after all players finish
-- [ ] Show winner and allow new game
-- [x] Controls: Flip, Bank, New Game (see below for rules)
+## 🚀 Quick Start
 
-### Flipping & Banking Rules
+```bash
+# Install dependencies
+npm install
 
-- Players may FLIP to draw a card on their turn.
-- Players may BANK their round score at the start of their turn, before flipping a new card.
-- Banking does NOT require a Freeze card; it is a strategic choice.
-- If a player flips and busts, they lose their unbanked points for the round.
-- Players are tempted to keep flipping for more points, but must bank before flipping to secure their score.
+# Start development server
+npm run dev
 
-## UI/UX
+# Play in terminal
+npm run cli
 
-- [x] Card rendering with ARIA/semantic markup
-- [x] Info panel for current player, scores, and turn
-- [x] Controls: Flip, Bank, New Game
-- [ ] Animations and polish
-- [x] Instructions/how to play section
+# Run tests
+npm test
 
-## Testing & Deployment
+# Visual regression tests
+npm run test:visual
+```
 
-- [ ] Manual and automated tests
-- [ ] Deploy to GitHub Pages/Netlify
+## 🏗️ Architecture
 
-## Strict Functional Linting
+### Core Philosophy
+All game logic follows strict functional programming principles:
+- **Immutable data structures** - No mutations, pure functions only
+- **No side effects** - Predictable, testable logic
+- **Separation of concerns** - Game logic independent of UI
+- **Type safety** - Full TypeScript coverage
 
-This project enforces pure, immutable, and functional game logic using ESLint with:
+### Project Structure
+```
+src/
+├── lib/              # Pure functional game logic
+│   ├── gameLogic.ts  # Core game state management
+│   ├── deck.ts       # Card generation and shuffling
+│   └── helpers.ts    # Scoring and utility functions
+├── components/       # Preact UI components
+├── cli.ts           # Terminal interface
+└── types.ts         # Shared type definitions
+```
 
-- `eslint-plugin-functional`
-- `eslint-plugin-sonarjs`
-- `eslint-plugin-unicorn`
+## ⚙️ Configuration
 
-See `strict-functional.eslint.config.js` for the strict rules applied to all core logic and tests. All contributors must follow the doctrine in `DOCTRINE.md` and pass linting before merging.
+Game behavior can be customized via options. See [GameOptions.md](./GameOptions.md) for detailed configuration.
 
-For rationale and details, see `FLIP7_PURE_LOGIC_LINT_BLOG.md`.
+**Default Settings:**
+- Passing enabled: `true`
+- Flips per turn: `1`
+- Show bust odds: `true`
+
+## 🧪 Testing Strategy
+
+- **Unit Tests:** Vitest for pure logic testing
+- **Visual Regression:** Playwright + Pixelmatch for UI consistency
+- **Pre-commit Hooks:** ESLint + Prettier + functional linting
+- **CI/CD:** Automated testing on all PRs
+
+```bash
+# Run all tests
+npm test
+
+# Visual regression tests
+npm run test:visual
+
+# Update visual baselines
+npm run test:visual:update
+
+# Component isolation tests
+npm run test:components
+```
+
+## 🎯 Game Rules
+
+### Basic Gameplay
+1. **Draw Phase:** Flip cards to build your hand
+2. **Decision Points:** Bank to secure points or continue for more
+3. **Bust Risk:** Drawing a duplicate number loses all round points
+4. **Round End:** All players bank or bust
+5. **Scoring:** Modifiers multiply/add to your number card total
+
+### Card Types
+- **Numbers (1-10):** Base scoring cards (4 copies each)
+- **Modifiers:** +2, +4, +6, +8, +10 (add to total), x2 (multiplies total)
+- **Actions:** Freeze, Flip Three, Second Chance
+
+### Scoring System
+Final score = `(sum of numbers + additive modifiers) × multiplier modifiers`
+
+## 🔧 Development
+
+### Prerequisites
+- Node.js 18+
+- npm 8+
+
+### Setup
+```bash
+git clone <repository>
+cd flip-7
+npm install
+npm run prepare  # Install git hooks
+```
+
+### Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint with auto-fix
+- `npm run cli` - Play in terminal
+- `npm test` - Run test suite with coverage
+- `npm run test:ui` - Interactive test UI
+- `npm run test:visual` - Visual regression tests
+
+### Code Standards
+- **Functional Programming:** Enforced via ESLint rules
+- **Type Safety:** Full TypeScript coverage required
+- **Accessibility:** WCAG 2.1 AA compliance
+- **Testing:** All logic must have unit tests
+
+## 📊 Code Coverage
+
+Current coverage: **30%** (Core logic: **85%**)
+
+Coverage focuses on the pure functional game logic in `src/lib/`. UI components are tested via visual regression and component isolation tests.
+
+## 🚀 Deployment
+
+The project is configured for deployment to:
+- **GitHub Pages** (recommended)
+- **Netlify**
+- **Vercel**
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new functionality
+4. Ensure all tests pass: `npm test`
+5. Run visual regression tests: `npm run test:visual`
+6. Submit a pull request
+
+### Pre-commit Requirements
+- ESLint passes with functional programming rules
+- All unit tests pass
+- Visual regression tests pass (or baselines updated)
+- TypeScript compilation succeeds
+
+## 📋 Roadmap
+
+- [x] Pure functional game logic
+- [x] Web UI with Preact + Tailwind
+- [x] CLI interface
+- [x] Visual regression testing
+- [x] Round history tracking
+- [ ] Mobile responsive design
+- [ ] Multiplayer networking
+- [ ] AI opponents
+- [ ] Tournament mode
+- [ ] Statistics dashboard
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🔗 Related Documentation
+
+- [Game Options Configuration](./GameOptions.md)
+- [Design Philosophy](./DOCTRINE.md)
+- [Development Blog](./FLIP7_PURE_LOGIC_LINT_BLOG.md)
+- [Visual Testing Guide](./VISUAL_TESTING_README.md)

@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "NodeNext",
+    "target": "ES2020",
+    "module": "ESNext",
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "allowJs": true,
     "checkJs": false,
     "strict": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
