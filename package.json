@@ -12,6 +12,8 @@
     "test": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage --reporter=json --outputFile=coverage-summary.json",
+    "test:coverage:cli": "vitest run --config vitest.cli.config.ts --coverage --reporter=json --outputFile=coverage-cli.json",
+    "test:coverage:ui": "vitest run --config vitest.ui.config.ts --coverage --reporter=json --outputFile=coverage-ui.json",
     "test:visual": "./scripts/visual-test.sh",
     "test:visual:update": "./scripts/visual-test.sh --update-baselines",
     "test:playwright": "playwright test",

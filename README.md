@@ -2,14 +2,15 @@
 
 [![Tests](https://github.com/username/flip-7/actions/workflows/lint.yml/badge.svg)](https://github.com/username/flip-7/actions/workflows/lint.yml)
 [![Visual Regression](https://github.com/username/flip-7/actions/workflows/visual-regression.yml/badge.svg)](https://github.com/username/flip-7/actions/workflows/visual-regression.yml)
-[![Coverage](https://img.shields.io/badge/coverage-30%25-orange.svg)](./coverage)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/flip-7/main/.github/badges/coverage.json)](./coverage)
+[![CLI Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/username/flip-7/main/.github/badges/coverage-cli.json)](./coverage-cli)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A modern, accessible card game built with pure functional programming principles. Features both web UI (Preact + Tailwind) and CLI implementations powered by the same immutable game logic.
 
 ## 🎮 Game Overview
 
-Flip 7 is a strategic card game where players draw number cards (1-10) and modifiers (+2, +4, +6, +8, +10, x2) while managing risk vs reward. Players must bank their scores before busting (drawing a duplicate number) or lose their round points.
+Flip 7 is a strategic card game where players draw number cards (0-12) and modifiers (+2, +4, +6, +8, +10, ×2) while managing risk vs reward. Players must bank their scores before busting (drawing a duplicate number) or lose their round points.
 
 **Key Features:**
 - **Pure Functional Logic:** Immutable game state, no side effects
@@ -18,7 +19,16 @@ Flip 7 is a strategic card game where players draw number cards (1-10) and modif
 - **Visual Regression Testing:** Automated UI consistency checks
 - **Round History:** Track performance across multiple rounds
 
-## 🚀 Quick Start
+## � Code Coverage
+
+The project maintains comprehensive test coverage with separate tracking for different components:
+
+- **Overall Coverage**: Full codebase including UI components, game logic, and utilities
+- **CLI Coverage**: Core game logic and CLI-specific functionality (higher coverage expected)
+
+Coverage badges automatically update with each commit to main branch. CLI coverage focuses on the pure functional game logic that powers both UI and CLI implementations.
+
+## �🚀 Quick Start
 
 ```bash
 # Install dependencies
@@ -98,12 +108,18 @@ npm run test:components
 5. **Scoring:** Modifiers multiply/add to your number card total
 
 ### Card Types
-- **Numbers (1-10):** Base scoring cards (4 copies each)
-- **Modifiers:** +2, +4, +6, +8, +10 (add to total), x2 (multiplies total)
+- **Numbers (0-12):** Base scoring cards (0×1, 1×2, 2×3, ..., 12×13 copies each)
+- **Modifiers:** +2, +4, +6, +8, +10 (add to total), ×2 (multiplies total)
 - **Actions:** Freeze, Flip Three, Second Chance
 
 ### Scoring System
-Final score = `(sum of numbers + additive modifiers) × multiplier modifiers`
+Final score = `((sum of numbers) × multiplier) + Flip 7 bonus + additive modifiers`
+
+**Scoring Order:**
+1. Sum all number cards (0-12)
+2. Apply ×2 multiplier (if present) 
+3. Add Flip 7 bonus (15 points if achieved)
+4. Add additive modifiers (+2, +4, +6, +8, +10)
 
 ## 🔧 Development
 

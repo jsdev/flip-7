@@ -21,17 +21,38 @@ describe('Flip 7 Pure Game Logic', () => {
   }
 
   it('number cards are only discarded on bust', () => {
+    // Set up a scenario where the current player can flip twice:
+    // - Players 1, 2, 3 are already banked, so only player 0 is active
+    // - This means when player 0's turn ends, it cycles back to player 0
     const state = makeState({
       deck: [
         { type: 'number', value: 5 },
         { type: 'number', value: 5 },
       ],
+      players: [
+        makePlayer('A'), // Active player
+        { ...makePlayer('B'), banked: true }, // Banked
+        { ...makePlayer('C'), banked: true }, // Banked  
+        { ...makePlayer('D'), banked: true }, // Banked
+      ],
+      currentPlayer: 0,
     });
+    
+    // First flip - should succeed and add card to hand
     const s1 = flipCard(state);
     expect(s1.players[0].numberCards.length).toBe(1);
-    const s2 = flipCard({ ...s1, deck: s1.deck });
+    expect(s1.status).toBe('choice-point'); // Player should have a choice after successful flip
+    
+    // Since other players are banked, player should be able to flip again
+    // Reset flipCount since turn should advance back to same player
+    const s1WithResetFlips = { ...s1, flipCount: 1 };
+    const s2 = flipCard(s1WithResetFlips);
+    
+    // Second flip should cause bust and discard all cards
     expect(s2.players[0].numberCards.length).toBe(0); // Discarded on bust
+    expect(s2.players[0].busted).toBe(true);
     expect(s2.discard.some((c) => c.value === 5)).toBe(true);
+    expect(s2.status).toBe('busted');
     return undefined;
   });
 

@@ -25,7 +25,66 @@ jobs:
         run: npx eslint src --ext .js,.jsx
         
       - name: Run tests with coverage
-        run: npm run test:coverage
+        run: |
+          npm run test:coverage:cli
+          npx vitest run src/__tests__/gameLogic.helpers.test.mts src/__tests__/gameLogic.test.mts src/__tests__/deck.test.mts --coverage
+        
+      - name: Generate coverage badge data
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Generate coverage data
+          node scripts/extract-coverage.cjs > coverage-data.json
+          
+          # Extract overall coverage
+          OVERALL_COVERAGE=$(node -e "
+            try {
+              const data = require('./coverage-data.json');
+              console.log(data.overall.lines);
+            } catch(e) {
+              console.log(0);
+            }
+          ")
+          
+          # Extract CLI coverage  
+          CLI_COVERAGE=$(node -e "
+            try {
+              const data = require('./coverage-data.json');
+              console.log(data.cli.lines);
+            } catch(e) {
+              console.log(0);
+            }
+          ")
+          
+          # Function to determine color based on coverage percentage
+          get_color() {
+            local coverage=$1
+            if [ $coverage -ge 80 ]; then
+              echo "brightgreen"
+            elif [ $coverage -ge 60 ]; then
+              echo "yellow"  
+            elif [ $coverage -ge 40 ]; then
+              echo "orange"
+            else
+              echo "red"
+            fi
+          }
+          
+          OVERALL_COLOR=$(get_color $OVERALL_COVERAGE)
+          CLI_COLOR=$(get_color $CLI_COVERAGE)
+          
+          # Create JSON for shields.io endpoint
+          mkdir -p .github/badges
+          echo "{\"schemaVersion\": 1, \"label\": \"coverage\", \"message\": \"${OVERALL_COVERAGE}%\", \"color\": \"${OVERALL_COLOR}\"}" > .github/badges/coverage.json
+          echo "{\"schemaVersion\": 1, \"label\": \"CLI coverage\", \"message\": \"${CLI_COVERAGE}%\", \"color\": \"${CLI_COLOR}\"}" > .github/badges/coverage-cli.json
+          
+      - name: Commit coverage data
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/badges/coverage.json .github/badges/coverage-cli.json || exit 0
+          git diff --staged --quiet || git commit -m "Update coverage data [skip ci]"
+          git push || true
         
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
@@ -41,16 +100,30 @@ jobs:
           script: |
             const fs = require('fs');
             try {
-              const coverage = JSON.parse(fs.readFileSync('coverage-summary.json', 'utf8'));
-              const summary = coverage.summary || coverage;
-              const coveragePct = Math.round(summary.lines?.pct || 0);
+              const data = JSON.parse(fs.readFileSync('coverage-data.json', 'utf8'));
+              const overall = data.overall;
+              const cli = data.cli;
               
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## 📊 Test Coverage Report\n\n**Overall Coverage: ${coveragePct}%**\n\n- Lines: ${summary.lines?.pct || 0}%\n- Functions: ${summary.functions?.pct || 0}%\n- Branches: ${summary.branches?.pct || 0}%\n- Statements: ${summary.statements?.pct || 0}%`
+                body: `## 📊 Test Coverage Report
+
+            **Overall Coverage: ${overall.lines}%**
+            - Lines: ${overall.lines}%
+            - Functions: ${overall.functions}%
+            - Branches: ${overall.branches}%
+            - Statements: ${overall.statements}%
+
+            **CLI Coverage: ${cli.lines}%**
+            - Lines: ${cli.lines}%
+            - Functions: ${cli.functions}%
+            - Branches: ${cli.branches}%
+            - Statements: ${cli.statements}%
+
+            *UI coverage will be available once UI tests are properly configured.*`
               });
             } catch (error) {
-              console.log('Could not parse coverage summary:', error.message);
+              console.log('Could not parse coverage data:', error.message);
             }

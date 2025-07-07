@@ -15,7 +15,7 @@ export default function CardShowcase({ isOpen, onClose }: CardShowcaseProps) {
 
   // Generate all card types for showcase
   const allCards = generateDeck();
-  
+
   // Group cards by type
   const numberCards = allCards.filter((card) => card.type === 'number');
   const modifierCards = allCards.filter((card) => card.type === 'modifier');
