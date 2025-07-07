@@ -10,10 +10,8 @@ import {
   copyPlayers,
   hasFlip7Bonus,
   bankPlayer,
-  applyFlip7Bonus,
   getFinalScore,
   getGameWinners, // <-- import the new helper
-  getOddsOfBusting,
   celebrateFlip7,
   discardRemainingCards,
   captureRoundData,
@@ -157,7 +155,7 @@ function handleNumberCard(
 
   // Check for Flip 7 bonus
   if (hasFlip7Bonus(newHand)) {
-    return handleFlip7Bonus(state, players, actingPlayer, newDeck, newHand as readonly CardType[]);
+    return handleFlip7Bonus(state, players, actingPlayer, newDeck);
   }
 
   const status = isChoicePoint(state, player) ? GameStatus.ChoicePoint : GameStatus.Flipped;
@@ -257,7 +255,6 @@ function handleFlip7Bonus(
   players: readonly Player[],
   actingPlayer: number,
   newDeck: ReadonlyArray<CardType>,
-  newHand: readonly CardType[],
 ): GameState {
   const player = players[actingPlayer];
   const roundScore = getFinalScore(player, GameConstants.Flip7Bonus);
@@ -290,12 +287,8 @@ function handleFlip7Bonus(
   // Forfeit all other unbanked players' cards to discard
   const finalDiscard = discardRemainingCards(newPlayers, state.discard);
 
-  // Trigger confetti celebration for Flip 7
-  try {
-    celebrateFlip7();
-  } catch (e) {
-    // Ignore confetti errors (e.g., in CLI/server environments)
-  }
+  // Trigger confetti celebration for Flip 7 (safely)
+  celebrateFlip7(true);
 
   // Capture round data for tally
   const currentRoundData = captureRoundData(newPlayers, eliminatedByFlip7);
@@ -363,7 +356,7 @@ export function handleActionTarget(state: GameState, targetIdx: number): GameSta
   // Validate target index
   if (targetIdx < 0 || targetIdx >= state.players.length) return state;
 
-  const { type, card, actingPlayer } = state.currentAction.pendingAction;
+  const { type } = state.currentAction.pendingAction;
   const players = copyPlayers(state.players);
 
   if (type === 'freeze') {
@@ -477,12 +470,8 @@ export function bankScore(state: GameState, playerIdx: number): GameState {
     // Forfeit all unbanked players' cards to discard
     const finalDiscard = discardRemainingCards(players, state.discard);
 
-    // Trigger confetti celebration for Flip 7
-    try {
-      celebrateFlip7();
-    } catch (e) {
-      // Ignore confetti errors (e.g., in CLI/server environments)
-    }
+    // Trigger confetti celebration for Flip 7 (safely)
+    celebrateFlip7(true);
 
     // Capture round data for tally
     const currentRoundData = captureRoundData(players, eliminatedByFlip7);
@@ -534,50 +523,6 @@ export function bankScore(state: GameState, playerIdx: number): GameState {
     gameOver,
     winners: gameOver ? winners : undefined,
     roundHistory: updatedRoundHistory,
-  };
-}
-
-function handleBankFlip7Bonus(
-  state: GameState,
-  players: readonly Player[],
-  playerIdx: number,
-): GameState {
-  // Use getFinalScore: sum, multipliers, Flip 7 bonus, then additions
-  const player = players[playerIdx];
-  const roundScore = getFinalScore(player, GameConstants.Flip7Bonus);
-  const newPlayers = players.map((p, i) =>
-    i === playerIdx
-      ? {
-          ...p,
-          score: p.score + roundScore,
-          numberCards: [],
-          modifiers: [],
-          bonusMultiplierCards: [],
-          bonusAdditionCards: [],
-          banked: true,
-        }
-      : !p.banked
-        ? {
-            ...p,
-            numberCards: [],
-            modifiers: [],
-            bonusMultiplierCards: [],
-            bonusAdditionCards: [],
-            score: 0,
-          }
-        : {
-            ...p,
-            numberCards: [],
-            modifiers: [],
-            bonusMultiplierCards: [],
-            bonusAdditionCards: [],
-          },
-  );
-  return {
-    ...state,
-    players: newPlayers,
-    gameOver: true,
-    status: GameStatus.Flip7BonusAwarded,
   };
 }
 

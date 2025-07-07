@@ -139,7 +139,12 @@ export function getOddsOfBusting(player: Player, remainingDeck: readonly CardTyp
 /**
  * Trigger confetti celebration for Flip 7 bonus
  */
-export function celebrateFlip7(): void {
+/* eslint-disable functional/no-return-void, functional/functional-parameters */
+export function celebrateFlip7(enabled: boolean = true): boolean {
+  if (!enabled) {
+    return false;
+  }
+
   // Fire confetti from multiple points
   const duration = 3 * 1000;
   const animationEnd = Date.now() + duration;
@@ -149,11 +154,12 @@ export function celebrateFlip7(): void {
     return Math.random() * (max - min) + min;
   }
 
-  const interval: any = setInterval(() => {
+  const interval: NodeJS.Timeout = setInterval(() => {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
-      return clearInterval(interval);
+      clearInterval(interval);
+      return;
     }
 
     const particleCount = 50 * (timeLeft / duration);
@@ -169,7 +175,10 @@ export function celebrateFlip7(): void {
       origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
     });
   }, 250);
+
+  return true;
 }
+/* eslint-enable functional/no-return-void, functional/functional-parameters */
 
 /**
  * Move all remaining player cards to discard at round end
@@ -179,17 +188,12 @@ export function discardRemainingCards(
   players: readonly Player[],
   currentDiscard: readonly CardType[],
 ): readonly CardType[] {
-  const allRemainingCards: readonly CardType[] = [];
-
-  // Collect all remaining cards from all players
-  players.forEach((player) => {
-    // Add any remaining number cards (shouldn't happen for banked players, but safety)
-    allRemainingCards.push(...player.numberCards);
-    // Add any remaining modifiers
-    allRemainingCards.push(...player.modifiers);
-    // Add any remaining action cards (shouldn't happen, but safety)
-    allRemainingCards.push(...player.actionCards);
-  });
+  // Collect all remaining cards from all players using functional approach
+  const allRemainingCards = players.flatMap((player) => [
+    ...player.numberCards,
+    ...player.modifiers,
+    ...player.actionCards,
+  ]);
 
   return [...currentDiscard, ...allRemainingCards];
 }

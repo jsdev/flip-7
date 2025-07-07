@@ -15,7 +15,15 @@ export default [
   js.configs.recommended,
   // Strict functional/immutable rules for core logic and tests
   {
-    files: ['src/lib/**/*.ts', 'src/__tests__/**/*.ts'],
+    files: ['src/lib/**/*.{ts,mts}', 'src/__tests__/**/*.{ts,mts}'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: 'module',
+        project: ['./tsconfig.json'],
+      },
+    },
     plugins: {
       functional,
       sonarjs,

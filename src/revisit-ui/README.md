@@ -14,6 +14,7 @@ These components have been renamed to `.txt` files so they:
 - **BonusCardsContainer.tsx.txt** - Container for bonus card functionality  
 - **FlipStackNew.tsx.txt** - Alternative implementation of flip stack
 - **FlipStackOld.tsx.txt** - Legacy flip stack implementation
+- **gameStore.ts.txt** - Zustand store for game state management (unused)
 - **InfoPanel.tsx.txt** - Information panel component
 - **PlayerComposition.tsx.txt** - Player layout component (imports ActionReceiver and PlayerHand)
 - **PlayerHand.tsx.txt** - Player hand component (was only used by PlayerComposition)
@@ -35,9 +36,9 @@ These components were identified as unused through static analysis on January 7,
 - No JSX usage found
 - No references in tests or configuration files
 
-Total components analyzed: 21
-- Used: 11 (52%)
-- Archived: 9 (43%)
+Total components analyzed: 22
+- Used: 11 (50%)
+- Archived: 10 (45%)
 - Documentation files: 1 (.md files and .svg assets)
 
-This represents a significant cleanup of ~43% of the component directory.
+This represents a significant cleanup of ~45% of unused code files.
