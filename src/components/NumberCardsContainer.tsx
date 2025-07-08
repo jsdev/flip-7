@@ -14,43 +14,44 @@ function NumberCardsContainer({ cards, secondChance = false }: NumberCardsContai
     return aValue - bValue;
   });
 
-  // Calculate fan angle for each card
+  // Calculate fan layout for overlapping cards
   const fanCards = sortedCards.map((card, index) => {
     const totalCards = sortedCards.length;
-    const maxAngle = Math.min(60, totalCards * 12); // Increased spread: Max 60 degrees spread
+    const cardWidth = 64; // w-16 = 64px
+    const overlapAmount = cardWidth * 0.7; // Cards overlap by 70% of their width
+    const maxAngle = Math.min(45, totalCards * 8); // Max 45 degrees spread, 8 degrees per card
     const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
     const angle = totalCards > 1 ? index * angleStep - maxAngle / 2 : 0;
 
-    // Calculate position offset for fan effect - increased radius and spread
-    const radius = 180; // Increased from 120
-    const x = Math.sin((angle * Math.PI) / 180) * radius * 0.5; // Increased from 0.3
-    const y = Math.cos((angle * Math.PI) / 180) * radius * 0.15; // Increased from 0.1
+    // Calculate horizontal position with overlap
+    const baseX = index * (cardWidth - overlapAmount); // Each card shifts right by remaining width
+    const centerOffset = totalCards > 1 ? -((totalCards - 1) * (cardWidth - overlapAmount)) / 2 : 0;
+    const x = baseX + centerOffset;
 
     return {
       card,
       angle,
       x,
-      y,
-      zIndex: index,
+      zIndex: index, // Higher index = on top
     };
   });
 
   return (
-    <div className="relative" data-testid="number-cards-container">
+    <div className="relative flex justify-center w-full" data-testid="number-cards-container">
       {/* Main Cards Fan */}
-      <div className="flex items-center justify-center h-40 w-full min-w-[600px]">
+      <div className="flex items-center justify-center h-40 w-full max-w-4xl">
         {' '}
-        {/* Increased height and width */}
+        {/* Increased max width and ensured centering */}
         {fanCards.length === 0 ? (
           <div className="text-gray-400 text-sm italic">No cards</div>
         ) : (
           <div className="relative w-full h-full flex items-center justify-center">
-            {fanCards.map(({ card, angle, x, y, zIndex }, index) => (
+            {fanCards.map(({ card, angle, x, zIndex }, index) => (
               <div
                 key={index}
                 className="absolute"
                 style={{
-                  transform: `translate(${x}px, ${y}px) rotate(${angle}deg)`,
+                  transform: `translateX(${x}px) rotate(${angle}deg)`,
                   zIndex,
                   transformOrigin: 'center bottom',
                 }}

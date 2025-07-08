@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'preact/hooks';
+import { useState, useCallback, useRef } from 'preact/hooks';
 import { generateDeck, shuffleDeck, dealCard } from '../lib/deck';
 import { getFinalScore, celebrateFlip7 } from '../lib/gameLogic.helpers';
 import { CardType, RoundPlayerData } from '../types';
@@ -117,6 +117,9 @@ export default function GameBoard() {
   >([]);
   const [currentAction, setCurrentAction] = useState<ActionContext | null>(null); // Top of stack
   const [showCardShowcase, setShowCardShowcase] = useState(false);
+  
+  // Add flip guard to prevent double execution
+  const flipInProgress = useRef(false);
 
   // Helper to push a new action context
   function pushActionContext(ctx: ActionContext) {
@@ -129,13 +132,25 @@ export default function GameBoard() {
 
   // Handler: Flip a card
   const handleFlip = useCallback(() => {
-    if (gameOver || (currentAction && currentAction.pendingAction)) return;
+    if (gameOver || (currentAction && currentAction.pendingAction) || flipInProgress.current) return;
+    
+    flipInProgress.current = true;
+    
+    // Ensure flip guard is always reset, even on early returns
+    const resetFlipGuard = () => {
+      flipInProgress.current = false;
+    };
+    
+    // Reset flip guard after a short delay to prevent accidental double-clicks
+    setTimeout(resetFlipGuard, 150);
+    
     const ctx = (currentAction || {}) as ActionContext;
     const isFlipThree = !!ctx.flipThreeState;
     const actingPlayer = isFlipThree ? ctx.flipThreeState!.target : currentPlayer;
     const [card, newDeck] = dealCard(deck);
     if (!card) {
       setStatus('Deck is empty!');
+      resetFlipGuard(); // Reset immediately on early return
       return;
     }
     const newPlayers = [...players];
@@ -182,6 +197,7 @@ export default function GameBoard() {
         } else {
           advanceTurn(newPlayers);
         }
+        resetFlipGuard(); // Reset immediately on early return
         return;
       }
       player.numberCards = [...player.numberCards, card];
@@ -243,6 +259,7 @@ export default function GameBoard() {
             flipThreeStep: isFlipThree ? 4 - (ctx.flipThreeState?.flipsRemaining ?? 0) : undefined,
           },
         ]);
+        resetFlipGuard(); // Reset immediately on early return
         return;
       }
 
@@ -287,6 +304,7 @@ export default function GameBoard() {
           });
           setStatus(`Select a player to ${card.value === 'Freeze' ? 'freeze' : 'flip three'}.`);
         }
+        resetFlipGuard(); // Reset immediately on early return
         return;
       }
       // Second Chance logic
@@ -309,6 +327,7 @@ export default function GameBoard() {
             action: 'second-chance',
           },
         ]);
+        resetFlipGuard(); // Reset immediately on early return
         return;
       }
     }
@@ -342,6 +361,7 @@ export default function GameBoard() {
         popActionContext();
         setStatus(`${player.name} completed Flip Three! Returning to previous action.`);
       }
+      resetFlipGuard(); // Reset immediately on early return
       return;
     }
     setDeck(newDeck);
@@ -581,54 +601,75 @@ export default function GameBoard() {
       className="w-screen h-screen bg-gradient-to-br from-green-100 to-blue-100 overflow-hidden relative"
       data-testid="game-board"
     >
-      {/* Top Left - Current Scores */}
-      <div className="absolute top-8 left-8 z-30 w-80">
+      {/* Top Right - Current Scores */}
+      <div className="absolute top-8 right-8 z-30 w-80">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4">
-          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3">
-            Scores
-          </h3>
-          <div className="space-y-2">
-            {players.map((player, index) => (
-              <div
-                key={player.name}
-                className={`flex justify-between items-center p-2 rounded ${
-                  index === currentPlayer ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50'
-                }`}
-              >
-                <span
-                  className={`text-sm font-medium ${
-                    index === currentPlayer ? 'text-blue-700' : 'text-gray-700'
+          <table className="w-full border-collapse rounded-lg overflow-hidden">
+            <caption className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3 text-left">
+              Current Scores
+            </caption>
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="text-left py-2 px-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Player
+                </th>
+                <th className="text-center py-2 px-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Score
+                </th>
+                <th className="text-center py-2 px-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player, index) => (
+                <tr
+                  key={player.name}
+                  className={`border-b border-gray-100 ${
+                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                  } ${
+                    index === currentPlayer ? 'ring-2 ring-blue-300 bg-blue-50' : ''
                   }`}
                 >
-                  {player.name}
-                </span>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-green-700">{player.score}</span>
-                  {player.banked && (
-                    <span className="text-xs bg-green-100 text-green-800 px-1 rounded">B</span>
-                  )}
-                  {player.busted && (
-                    <span className="text-xs bg-red-100 text-red-800 px-1 rounded">X</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+                  <td
+                    className={`py-2 px-3 text-sm font-medium ${
+                      index === currentPlayer ? 'text-blue-700' : 'text-gray-700'
+                    }`}
+                  >
+                    {player.name}
+                    {index === currentPlayer && (
+                      <span className="ml-2 text-xs text-blue-600">●</span>
+                    )}
+                  </td>
+                  <td className="py-2 px-3 text-center font-bold text-green-700">
+                    {player.score}
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex items-center justify-center space-x-1">
+                      {player.banked && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          Banked
+                        </span>
+                      )}
+                      {player.busted && (
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                          Busted
+                        </span>
+                      )}
+                      {!player.banked && !player.busted && (
+                        <span className="text-xs text-gray-400">Active</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        {/* Round History Table */}
-        {roundHistory.length > 0 && (
-          <div className="mt-4">
-            <RoundHistoryTable
-              roundHistory={roundHistory}
-              playerNames={players.map((p) => p.name)}
-            />
-          </div>
-        )}
       </div>
 
-      {/* Top Right - Player List */}
-      <div className="absolute top-8 right-8 z-30 w-96">
+      {/* Top Left - Player List */}
+      <div className="absolute top-8 left-8 z-30 w-96">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4">
           <PlayerList
             players={players}
@@ -638,6 +679,16 @@ export default function GameBoard() {
             eliminatedByFlip7={eliminatedByFlip7}
           />
         </div>
+        
+        {/* Round History Table */}
+        {roundHistory.length > 0 && (
+          <div className="mt-4">
+            <RoundHistoryTable
+              roundHistory={roundHistory}
+              playerNames={players.map((p) => p.name)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Center - FlipStack and Discard */}
@@ -662,7 +713,7 @@ export default function GameBoard() {
 
       {/* Bottom - Current Player's Cards */}
       <div className="absolute bottom-8 left-0 right-0 z-30 px-8">
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mx-auto max-w-none">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mx-auto max-w-6xl">
           {/* Player Name & Status */}
           <div className="text-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">{players[currentPlayer].name}</h2>
@@ -670,7 +721,7 @@ export default function GameBoard() {
           </div>
 
           {/* Number Cards with fan effect */}
-          <div className="mb-6 flex justify-center">
+          <div className="mb-6 flex justify-center w-full">
             <NumberCardsContainer
               cards={players[currentPlayer].numberCards}
               secondChance={players[currentPlayer].secondChance}
