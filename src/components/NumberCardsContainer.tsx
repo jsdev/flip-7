@@ -14,52 +14,58 @@ function NumberCardsContainer({ cards, secondChance = false }: NumberCardsContai
     return aValue - bValue;
   });
 
-  // Calculate fan layout for overlapping cards
-  const fanCards = sortedCards.map((card, index) => {
-    const totalCards = sortedCards.length;
-    const cardWidth = 64; // w-16 = 64px
-    const overlapAmount = cardWidth * 0.7; // Cards overlap by 70% of their width
-    const maxAngle = Math.min(45, totalCards * 8); // Max 45 degrees spread, 8 degrees per card
-    const angleStep = totalCards > 1 ? maxAngle / (totalCards - 1) : 0;
-    const angle = totalCards > 1 ? index * angleStep - maxAngle / 2 : 0;
+  // Calculate card position for proper fanning (closer to real card hand)
+  const getCardPosition = (index: number, cardCount: number) => {
+    if (cardCount === 1) {
+      return { angle: 0, translateX: 0 };
+    }
 
-    // Calculate horizontal position with overlap
-    const baseX = index * (cardWidth - overlapAmount); // Each card shifts right by remaining width
-    const centerOffset = totalCards > 1 ? -((totalCards - 1) * (cardWidth - overlapAmount)) / 2 : 0;
-    const x = baseX + centerOffset;
+    // Calculate fan spread - tighter fan with more overlap
+    const maxAngle = Math.min(40, cardCount * 6); // Reduced max angle for tighter fan
+    const angleStep = maxAngle / (cardCount - 1);
+    const angle = index * angleStep - maxAngle / 2;
 
-    return {
-      card,
-      angle,
-      x,
-      zIndex: index, // Higher index = on top
-    };
-  });
+    // Calculate horizontal spacing with heavy overlap (like real cards)
+    const cardWidth = 80; // w-20 = 80px
+    const overlapAmount = cardWidth * 0.85; // 85% overlap (show only 15% of each card)
+    const spacing = cardWidth - overlapAmount;
+    const totalWidth = cardWidth + (cardCount - 1) * spacing;
+    const startX = -totalWidth / 2;
+    const translateX = startX + index * spacing;
+
+    return { angle, translateX };
+  };
 
   return (
     <div className="relative flex justify-center w-full" data-testid="number-cards-container">
       {/* Main Cards Fan */}
-      <div className="flex items-center justify-center h-40 w-full max-w-4xl">
-        {' '}
-        {/* Increased max width and ensured centering */}
-        {fanCards.length === 0 ? (
-          <div className="text-gray-400 text-sm italic">No cards</div>
+      <div className="relative" style={{ width: '600px', height: '180px' }}>
+        {sortedCards.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm italic">
+            No cards
+          </div>
         ) : (
-          <div className="relative w-full h-full flex items-center justify-center">
-            {fanCards.map(({ card, angle, x, zIndex }, index) => (
+          sortedCards.map((card, index) => {
+            const { angle, translateX } = getCardPosition(index, sortedCards.length);
+            const translateY = Math.abs(angle) * 1.2; // Exact value from inspire.txt
+
+            return (
               <div
                 key={index}
-                className="absolute"
+                className="absolute w-20 h-28 cursor-pointer hover:scale-110 transition-all duration-300 hover:-translate-y-6 hover:shadow-2xl"
                 style={{
-                  transform: `translateX(${x}px) rotate(${angle}deg)`,
-                  zIndex,
+                  transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${angle}deg)`,
                   transformOrigin: 'center bottom',
+                  left: '50%',
+                  bottom: '0',
+                  marginLeft: '-40px', // Half card width to center
+                  zIndex: index + 1,
                 }}
               >
-                <CardComponent card={card} className="w-16 h-24" />
+                <CardComponent card={card} className="w-20 h-28 shadow-lg" />
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
 

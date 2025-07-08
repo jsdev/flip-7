@@ -117,7 +117,7 @@ export default function GameBoard() {
   >([]);
   const [currentAction, setCurrentAction] = useState<ActionContext | null>(null); // Top of stack
   const [showCardShowcase, setShowCardShowcase] = useState(false);
-  
+
   // Add flip guard to prevent double execution
   const flipInProgress = useRef(false);
 
@@ -132,18 +132,19 @@ export default function GameBoard() {
 
   // Handler: Flip a card
   const handleFlip = useCallback(() => {
-    if (gameOver || (currentAction && currentAction.pendingAction) || flipInProgress.current) return;
-    
+    if (gameOver || (currentAction && currentAction.pendingAction) || flipInProgress.current)
+      return;
+
     flipInProgress.current = true;
-    
+
     // Ensure flip guard is always reset, even on early returns
     const resetFlipGuard = () => {
       flipInProgress.current = false;
     };
-    
+
     // Reset flip guard after a short delay to prevent accidental double-clicks
     setTimeout(resetFlipGuard, 150);
-    
+
     const ctx = (currentAction || {}) as ActionContext;
     const isFlipThree = !!ctx.flipThreeState;
     const actingPlayer = isFlipThree ? ctx.flipThreeState!.target : currentPlayer;
@@ -627,9 +628,7 @@ export default function GameBoard() {
                   key={player.name}
                   className={`border-b border-gray-100 ${
                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                  } ${
-                    index === currentPlayer ? 'ring-2 ring-blue-300 bg-blue-50' : ''
-                  }`}
+                  } ${index === currentPlayer ? 'ring-2 ring-blue-300 bg-blue-50' : ''}`}
                 >
                   <td
                     className={`py-2 px-3 text-sm font-medium ${
@@ -641,9 +640,7 @@ export default function GameBoard() {
                       <span className="ml-2 text-xs text-blue-600">●</span>
                     )}
                   </td>
-                  <td className="py-2 px-3 text-center font-bold text-green-700">
-                    {player.score}
-                  </td>
+                  <td className="py-2 px-3 text-center font-bold text-green-700">{player.score}</td>
                   <td className="py-2 px-3 text-center">
                     <div className="flex items-center justify-center space-x-1">
                       {player.banked && (
@@ -679,7 +676,7 @@ export default function GameBoard() {
             eliminatedByFlip7={eliminatedByFlip7}
           />
         </div>
-        
+
         {/* Round History Table */}
         {roundHistory.length > 0 && (
           <div className="mt-4">
@@ -712,16 +709,16 @@ export default function GameBoard() {
       </div>
 
       {/* Bottom - Current Player's Cards */}
-      <div className="absolute bottom-8 left-0 right-0 z-30 px-8">
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mx-auto max-w-6xl">
+      <div className="absolute bottom-4 left-0 right-0 z-30 px-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mx-auto max-w-full">
           {/* Player Name & Status */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-gray-800">{players[currentPlayer].name}</h2>
             <div className="text-sm text-gray-600">Score: {players[currentPlayer].score} pts</div>
           </div>
 
-          {/* Number Cards with fan effect */}
-          <div className="mb-6 flex justify-center w-full">
+          {/* Number Cards with fan effect - Give more space */}
+          <div className="mb-8 flex justify-center w-full min-h-[180px]">
             <NumberCardsContainer
               cards={players[currentPlayer].numberCards}
               secondChance={players[currentPlayer].secondChance}
