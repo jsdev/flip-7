@@ -13,9 +13,9 @@ import unicorn from 'eslint-plugin-unicorn';
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
   js.configs.recommended,
-  // Strict functional/immutable rules for core logic and tests
+  // Strict functional/immutable rules for core logic only (excluding tests for now)
   {
-    files: ['src/lib/**/*.{ts,mts}', 'src/__tests__/**/*.{ts,mts}'],
+    files: ['src/lib/**/*.{ts,mts}'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {

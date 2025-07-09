@@ -143,7 +143,7 @@ export default function GameBoard() {
     };
 
     // Reset flip guard after a short delay to prevent accidental double-clicks
-    setTimeout(resetFlipGuard, 150);
+    window.setTimeout(resetFlipGuard, 150);
 
     const ctx = (currentAction || {}) as ActionContext;
     const isFlipThree = !!ctx.flipThreeState;

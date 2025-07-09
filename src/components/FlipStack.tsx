@@ -32,9 +32,6 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
     return 1;
   };
 
-  const stackOffset = getStackOffset(deckCount);
-  const stackLayers = Math.min(Math.max(Math.floor(deckCount / 10), 1), 8); // Show 1-8 layers
-
   return (
     <div className="relative">
       {/* Deck Stack - exact implementation from inspire.txt */}
@@ -46,7 +43,7 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
             '--card-count': deckCount,
             '--stack-height': `clamp(8px, ${Math.max(deckCount * 0.5, 2)}px, 40px)`,
             '--stack-offset': `clamp(1px, ${Math.max(deckCount * 0.1, 0.5)}px, 3px)`,
-          } as any
+          } as React.CSSProperties & Record<string, string | number>
         }
       >
         {/* Stack Layers - exact from inspire.txt */}
@@ -78,7 +75,7 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
                 : 'hover:scale-105 cursor-pointer active:scale-95'
             }
           `}
-          onClick={handleFlip}
+          onClick={() => handleFlip()}
           disabled={disabled || isFlipping}
           aria-label={`Flip a card (${deckCount} cards remaining)`}
           style={{
