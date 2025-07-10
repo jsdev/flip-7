@@ -1,5 +1,5 @@
 // Game state creation helper for Flip 7
-import type { GameState, GameOptions } from '../types.js';
+import type { GameState } from '../types.js';
 import { DEFAULT_GAME_OPTIONS } from './gameLogic.js';
 import { createPlayer } from './player.js';
 

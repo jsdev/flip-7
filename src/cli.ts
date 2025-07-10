@@ -9,7 +9,7 @@ import {
   DEFAULT_GAME_OPTIONS,
 } from './lib/gameLogic.js';
 import { getBustOddsDisplay } from './lib/gameLogic.helpers.js';
-import { createPlayer } from './lib/player.js';
+// import { createPlayer } from './lib/player.js'; // Unused
 import type { Player, CardType, GameState } from './types.js';
 
 const rl = readline.createInterface({
@@ -134,7 +134,7 @@ async function main() {
       }
       // If there is a pending action, force resolution
       if (state.currentAction?.pendingAction) {
-        const { type, card, actingPlayer } = state.currentAction.pendingAction;
+        const { type, actingPlayer } = state.currentAction.pendingAction;
         const validTargets = state.players
           .map((p, idx) => idx)
           .filter(

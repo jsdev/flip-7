@@ -13,11 +13,15 @@ interface GameStore {
 
 export const useGameStore = create<GameStore>((set) => ({
   state: {} as GameState, // Initialize with a real initial state when used
+
   setState: (newState) => set({ state: newState }),
   flipCard: () => set((store) => ({ state: flipCard(store.state) })),
+
   bankScore: (playerIdx) => set((store) => ({ state: bankScore(store.state, playerIdx) })),
+
   handleActionTarget: (targetIdx) =>
     set((store) => ({ state: handleActionTarget(store.state, targetIdx) })),
+
   reset: (initialState) => set({ state: initialState }),
 }));
 

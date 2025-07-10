@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'preact/hooks';
 
 interface FlipStackProps {
@@ -21,15 +22,6 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
 
     // eslint-disable-next-line no-undef
     setTimeout(completeFlip, 500);
-  };
-
-  // Calculate dynamic stacking based on deck count (inspired by your example)
-  const getStackOffset = (deckCount: number) => {
-    if (deckCount > 80) return 3;
-    if (deckCount > 60) return 2.5;
-    if (deckCount > 40) return 2;
-    if (deckCount > 20) return 1.5;
-    return 1;
   };
 
   return (
@@ -75,7 +67,7 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
                 : 'hover:scale-105 cursor-pointer active:scale-95'
             }
           `}
-          onClick={() => handleFlip()}
+          onClick={handleFlip}
           disabled={disabled || isFlipping}
           aria-label={`Flip a card (${deckCount} cards remaining)`}
           style={{

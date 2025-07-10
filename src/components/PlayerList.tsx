@@ -3,7 +3,7 @@ import { Player } from '../types';
 interface PlayerListProps {
   players: ReadonlyArray<Player>;
   currentPlayerIndex: number;
-  onActionTarget?: (index: number) => void;
+  onActionTarget?: (playerIndex: number) => void;
   actionPrompt?: {
     type: 'freeze' | 'flip-three';
     validTargets: number[];
@@ -167,15 +167,15 @@ export default function PlayerList({
   return (
     <div className="space-y-2">
       <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3">Players</h3>
-      {players.map((player, index) => {
+      {players.map((player, playerIndex) => {
         const eliminatedInfo = eliminatedByFlip7?.find((e) => e.playerName === player.name);
         return (
           <PlayerRow
             key={player.name}
             player={player}
-            isCurrent={index === currentPlayerIndex}
-            canReceiveAction={actionPrompt?.validTargets.includes(index) || false}
-            onActionTarget={onActionTarget ? createActionHandler(index) : undefined}
+            isCurrent={playerIndex === currentPlayerIndex}
+            canReceiveAction={actionPrompt?.validTargets.includes(playerIndex) || false}
+            onActionTarget={onActionTarget ? createActionHandler(playerIndex) : undefined}
             isEliminatedByFlip7={!!eliminatedInfo}
             potentialScore={eliminatedInfo?.potentialScore}
           />

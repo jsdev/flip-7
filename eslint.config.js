@@ -108,6 +108,9 @@ export default [
     },
     settings: {
       preact: { pragma: 'h' },
+      react: {
+        version: '18.0', // Add React version to suppress warning
+      },
     },
   },
 ];

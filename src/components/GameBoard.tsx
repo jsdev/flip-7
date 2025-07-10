@@ -130,6 +130,16 @@ export default function GameBoard() {
     setCurrentAction(null);
   }
 
+  // Handler: Show card showcase
+  const handleShowCardShowcase = useCallback(() => {
+    setShowCardShowcase(true);
+  }, []);
+
+  // Handler: Close card showcase
+  const handleCloseCardShowcase = useCallback(() => {
+    setShowCardShowcase(false);
+  }, []);
+
   // Handler: Flip a card
   const handleFlip = useCallback(() => {
     if (gameOver || (currentAction && currentAction.pendingAction) || flipInProgress.current)
@@ -143,7 +153,7 @@ export default function GameBoard() {
     };
 
     // Reset flip guard after a short delay to prevent accidental double-clicks
-    window.setTimeout(resetFlipGuard, 150);
+    globalThis.setTimeout(resetFlipGuard, 150);
 
     const ctx = (currentAction || {}) as ActionContext;
     const isFlipThree = !!ctx.flipThreeState;
@@ -244,7 +254,7 @@ export default function GameBoard() {
         // Trigger confetti
         try {
           celebrateFlip7();
-        } catch (e) {
+        } catch {
           // Ignore confetti errors
         }
 
@@ -366,6 +376,7 @@ export default function GameBoard() {
       return;
     }
     setDeck(newDeck);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentAction, gameOver, deck, players, currentPlayer, discard, actionLog, round]);
 
   // Handler: Resolve pending action (Freeze or Flip Three)
@@ -425,6 +436,7 @@ export default function GameBoard() {
         setDiscard([...discard, card]);
       }
     },
+
     [currentAction, players, actionLog, round, discard],
   );
 
@@ -486,6 +498,7 @@ export default function GameBoard() {
       setCurrentPlayer(next);
       setStatus(`${updatedPlayers[next].name}'s turn`);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentPlayer],
   );
 
@@ -540,7 +553,7 @@ export default function GameBoard() {
       // Trigger confetti
       try {
         celebrateFlip7();
-      } catch (e) {
+      } catch {
         // Ignore confetti errors
       }
     } else {
@@ -559,6 +572,7 @@ export default function GameBoard() {
         action: 'bank',
       },
     ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameOver, players, currentPlayer, actionLog, round]);
 
   // Handler: New Game
@@ -746,7 +760,7 @@ export default function GameBoard() {
 
             <button
               className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg shadow transition-colors"
-              onClick={() => setShowCardShowcase(true)}
+              onClick={handleShowCardShowcase}
             >
               View Cards
             </button>
@@ -806,7 +820,7 @@ export default function GameBoard() {
       )}
 
       {/* Card Showcase Dialog */}
-      <CardShowcase isOpen={showCardShowcase} onClose={() => setShowCardShowcase(false)} />
+      <CardShowcase isOpen={showCardShowcase} onClose={handleCloseCardShowcase} />
     </div>
   );
 }

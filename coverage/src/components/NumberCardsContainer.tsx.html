@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/64</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/64</span>
             </div>
         
             
@@ -149,7 +149,14 @@
 <a name='L84'></a><a href='#L84'>84</a>
 <a name='L85'></a><a href='#L85'>85</a>
 <a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -170,15 +177,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -194,6 +199,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -205,10 +217,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -251,51 +265,58 @@ interface NumberCardsContainerProps {
 <span class="cstat-no" title="statement not covered" >    return aValue - bValue;</span>
 <span class="cstat-no" title="statement not covered" >  });</span>
 &nbsp;
-  // Calculate fan angle for each card
-<span class="cstat-no" title="statement not covered" >  const fanCards = sortedCards.map((card, index) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const totalCards = sortedCards.length;</span>
-<span class="cstat-no" title="statement not covered" >    const maxAngle = Math.min(60, totalCards * 12); // Increased spread: Max 60 degrees spread</span>
-<span class="cstat-no" title="statement not covered" >    const angleStep = totalCards &gt; 1 ? maxAngle / (totalCards - 1) : 0;</span>
-<span class="cstat-no" title="statement not covered" >    const angle = totalCards &gt; 1 ? index * angleStep - maxAngle / 2 : 0;</span>
+  // Calculate card position for proper fanning (closer to real card hand)
+<span class="cstat-no" title="statement not covered" >  const getCardPosition = (index: number, cardCount: number) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (cardCount === 1) {</span>
+<span class="cstat-no" title="statement not covered" >      return { angle: 0, translateX: 0 };</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-    // Calculate position offset for fan effect - increased radius and spread
-<span class="cstat-no" title="statement not covered" >    const radius = 180; // Increased from 120</span>
-<span class="cstat-no" title="statement not covered" >    const x = Math.sin((angle * Math.PI) / 180) * radius * 0.5; // Increased from 0.3</span>
-<span class="cstat-no" title="statement not covered" >    const y = Math.cos((angle * Math.PI) / 180) * radius * 0.15; // Increased from 0.1</span>
+    // Calculate fan spread - tighter fan with more overlap
+<span class="cstat-no" title="statement not covered" >    const maxAngle = Math.min(40, cardCount * 6); // Reduced max angle for tighter fan</span>
+<span class="cstat-no" title="statement not covered" >    const angleStep = maxAngle / (cardCount - 1);</span>
+<span class="cstat-no" title="statement not covered" >    const angle = index * angleStep - maxAngle / 2;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return {</span>
-<span class="cstat-no" title="statement not covered" >      card,</span>
-<span class="cstat-no" title="statement not covered" >      angle,</span>
-<span class="cstat-no" title="statement not covered" >      x,</span>
-<span class="cstat-no" title="statement not covered" >      y,</span>
-<span class="cstat-no" title="statement not covered" >      zIndex: index,</span>
-<span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >  });</span>
+    // Calculate horizontal spacing with heavy overlap (like real cards)
+<span class="cstat-no" title="statement not covered" >    const cardWidth = 80; // w-20 = 80px</span>
+<span class="cstat-no" title="statement not covered" >    const overlapAmount = cardWidth * 0.85; // 85% overlap (show only 15% of each card)</span>
+<span class="cstat-no" title="statement not covered" >    const spacing = cardWidth - overlapAmount;</span>
+<span class="cstat-no" title="statement not covered" >    const totalWidth = cardWidth + (cardCount - 1) * spacing;</span>
+<span class="cstat-no" title="statement not covered" >    const startX = -totalWidth / 2;</span>
+<span class="cstat-no" title="statement not covered" >    const translateX = startX + index * spacing;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return { angle, translateX };</span>
+<span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div className="relative flex justify-center w-full" data-testid="number-cards-container"&gt;</span>
       {/* Main Cards Fan */}
-<span class="cstat-no" title="statement not covered" >      &lt;div className="flex items-center justify-center h-40 w-full max-w-4xl"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {' '}</span>
-        {/* Increased max width and ensured centering */}
-<span class="cstat-no" title="statement not covered" >        {fanCards.length === 0 ? (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;div className="text-gray-400 text-sm italic"&gt;No cards&lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;div className="relative" style={{ width: '600px', height: '180px' }}&gt;</span>
+<span class="cstat-no" title="statement not covered" >        {sortedCards.length === 0 ? (</span>
+<span class="cstat-no" title="statement not covered" >          &lt;div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm italic"&gt;</span>
+            No cards
+<span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
         ) : (
-<span class="cstat-no" title="statement not covered" >          &lt;div className="relative w-full h-full flex items-center justify-center"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {fanCards.map(({ card, angle, x, y, zIndex }, index) =&gt; (</span>
+<span class="cstat-no" title="statement not covered" >          sortedCards.map((card, index) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            const { angle, translateX } = getCardPosition(index, sortedCards.length);</span>
+<span class="cstat-no" title="statement not covered" >            const translateY = Math.abs(angle) * 1.2; // Exact value from inspire.txt</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            return (</span>
 <span class="cstat-no" title="statement not covered" >              &lt;div</span>
 <span class="cstat-no" title="statement not covered" >                key={index}</span>
-<span class="cstat-no" title="statement not covered" >                className="absolute"</span>
+<span class="cstat-no" title="statement not covered" >                className="absolute w-20 h-28 cursor-pointer hover:scale-110 transition-all duration-300 hover:-translate-y-6 hover:shadow-2xl"</span>
 <span class="cstat-no" title="statement not covered" >                style={{</span>
-<span class="cstat-no" title="statement not covered" >                  transform: `translate(${x}px, ${y}px) rotate(${angle}deg)`,</span>
-<span class="cstat-no" title="statement not covered" >                  zIndex,</span>
+<span class="cstat-no" title="statement not covered" >                  transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${angle}deg)`,</span>
 <span class="cstat-no" title="statement not covered" >                  transformOrigin: 'center bottom',</span>
+<span class="cstat-no" title="statement not covered" >                  left: '50%',</span>
+<span class="cstat-no" title="statement not covered" >                  bottom: '0',</span>
+<span class="cstat-no" title="statement not covered" >                  marginLeft: '-40px', // Half card width to center</span>
+<span class="cstat-no" title="statement not covered" >                  zIndex: index + 1,</span>
 <span class="cstat-no" title="statement not covered" >                }}</span>
               &gt;
-<span class="cstat-no" title="statement not covered" >                &lt;CardComponent card={card} className="w-16 h-24" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;CardComponent card={card} className="w-20 h-28 shadow-lg" /&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >            ))}</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
+            );
+<span class="cstat-no" title="statement not covered" >          })</span>
         )}
 <span class="cstat-no" title="statement not covered" >      &lt;/div&gt;</span>
 &nbsp;
@@ -328,7 +349,7 @@ interface NumberCardsContainerProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-07T04:00:53.218Z
+                at 2025-07-10T04:46:16.860Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -32,6 +32,11 @@ export default function CardShowcase({ isOpen, onClose }: CardShowcaseProps) {
     (card, index, self) => index === self.findIndex((c) => c.value === card.value),
   );
 
+  // Handler for section navigation
+  const handleSectionChange = (index: number) => () => {
+    setCurrentSection(index);
+  };
+
   const sections = [
     {
       title: 'Number Cards',
@@ -95,7 +100,7 @@ export default function CardShowcase({ isOpen, onClose }: CardShowcaseProps) {
           {sections.map((section, index) => (
             <button
               key={section.title}
-              onClick={() => setCurrentSection(index)}
+              onClick={handleSectionChange(index)}
               className={`px-4 py-2 mx-2 rounded-lg transition-colors ${
                 currentSection === index
                   ? 'bg-blue-500 text-white'

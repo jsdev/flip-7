@@ -1,0 +1,25 @@
+
+> flip-7@0.0.0 lint
+> eslint src --fix --ext .js,.jsx,.ts,.tsx
+
+
+/workspaces/flip-7/src/components/CardShowcase.tsx
+  103:15  warning  JSX props should not use arrow functions  react/jsx-no-bind
+
+/workspaces/flip-7/src/components/FlipStack.tsx
+  70:11  warning  JSX props should not use arrow functions  react/jsx-no-bind
+
+/workspaces/flip-7/src/components/GameBoard.tsx
+  156:5  error  'window' is not defined  no-undef
+
+/workspaces/flip-7/src/components/PlayerList.tsx
+  6:21  warning  'index' is defined but never used  no-unused-vars
+
+/workspaces/flip-7/src/store/gameStore.ts
+   7:14  warning  'newState' is defined but never used      no-unused-vars
+   9:15  warning  'playerIdx' is defined but never used     no-unused-vars
+  10:24  warning  'targetIdx' is defined but never used     no-unused-vars
+  11:11  warning  'initialState' is defined but never used  no-unused-vars
+
+✖ 8 problems (1 error, 7 warnings)
+
