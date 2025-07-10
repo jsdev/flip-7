@@ -4,11 +4,11 @@ import type { GameState } from '../types.js';
 
 interface GameStore {
   state: GameState;
-  setState: (newState: GameState) => void;
+  setState: () => void;
   flipCard: () => void;
-  bankScore: (playerIdx: number) => void;
-  handleActionTarget: (targetIdx: number) => void;
-  reset: (initialState: GameState) => void;
+  bankScore: () => void;
+  handleActionTarget: () => void;
+  reset: () => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({

@@ -2,9 +2,9 @@ import {
   flipCard,
   bankScore,
   handleActionTarget,
-  GameStatus,
   resolveAction,
 } from '../lib/gameLogic.js';
+import { GameStatus } from '../lib/GameStatus.js';
 import { createPlayer } from '../lib/player.js';
 import { createGameState } from '../lib/gameState.js';
 import { describe, it, expect } from 'vitest';

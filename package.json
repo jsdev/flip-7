@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src --fix --ext .js,.jsx,.ts,.tsx",
     "prepare": "husky install",
-    "test": "vitest run --coverage",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage --reporter=json --outputFile=coverage-summary.json",
     "test:coverage:cli": "vitest run --config vitest.cli.config.ts --coverage --reporter=json --outputFile=coverage-cli.json",

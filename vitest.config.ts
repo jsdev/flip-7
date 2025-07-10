@@ -7,17 +7,7 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,mts}', 'src/**/*.spec.{ts,mts}'],
     exclude: [
       'tests/**', 
-      'node_modules/**',
-      // Temporarily exclude these until we fix type issues
-      'src/__tests__/deck.test.mts',
-      'src/__tests__/gameLogic.helpers.test.mts', 
-      'src/__tests__/gameLogic.pure.test.mts',
-      'src/__tests__/gameLogic.test.mts',
-      // Keep the duplicates (.ts versions) excluded too 
-      'src/__tests__/deck.test.ts',
-      'src/__tests__/gameLogic.helpers.test.ts',
-      'src/__tests__/gameLogic.pure.test.ts', 
-      'src/__tests__/gameLogic.test.ts'
+      'node_modules/**'
     ],
     coverage: {
       // Configure coverage reporting

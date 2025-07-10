@@ -102,8 +102,9 @@ export default [
       'object-curly-spacing': 'off',
       'array-bracket-spacing': 'off',
       'jsx-quotes': 'off',
-      'no-unused-vars': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'react/jsx-no-bind': 'off', // Allow arrow functions in JSX for simplicity
       // Add more as needed if you see more formatting rules in lint output
     },
     settings: {

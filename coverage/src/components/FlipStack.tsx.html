@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/78</span>
+                <span class='fraction'>0/80</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/78</span>
+                <span class='fraction'>0/80</span>
             </div>
         
             
@@ -177,7 +177,12 @@
 <a name='L112'></a><a href='#L112'>112</a>
 <a name='L113'></a><a href='#L113'>113</a>
 <a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -203,6 +208,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -218,17 +239,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -304,7 +314,7 @@ interface FlipStackProps {
 <span class="cstat-no" title="statement not covered" >function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackProps) {</span>
 <span class="cstat-no" title="statement not covered" >  const [isFlipping, setIsFlipping] = useState(false);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const handleFlip = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  function handleFlip() {</span>
 <span class="cstat-no" title="statement not covered" >    if (disabled || isFlipping) return;</span>
 <span class="cstat-no" title="statement not covered" >    setIsFlipping(true);</span>
 &nbsp;
@@ -315,7 +325,23 @@ interface FlipStackProps {
 &nbsp;
     // eslint-disable-next-line no-undef
 <span class="cstat-no" title="statement not covered" >    setTimeout(completeFlip, 500);</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+&nbsp;
+  // Render stack layer
+<span class="cstat-no" title="statement not covered" >  const renderStackLayer = (_: unknown, i: number) =&gt; (</span>
+<span class="cstat-no" title="statement not covered" >    &lt;div</span>
+<span class="cstat-no" title="statement not covered" >      key={i}</span>
+<span class="cstat-no" title="statement not covered" >      className="absolute w-24 h-32 bg-yellow-400 border border-yellow-600 rounded-lg shadow-lg"</span>
+<span class="cstat-no" title="statement not covered" >      style={{</span>
+<span class="cstat-no" title="statement not covered" >        transform: `translateY(-${i * (deckCount &gt; 80 ? 3 : deckCount &gt; 60 ? 2.5 : deckCount &gt; 40 ? 2 : deckCount &gt; 20 ? 1.5 : 1)}px) translateX(-${i * 0.5}px)`,</span>
+<span class="cstat-no" title="statement not covered" >        zIndex: 10 - i,</span>
+<span class="cstat-no" title="statement not covered" >      }}</span>
+    &gt;
+<span class="cstat-no" title="statement not covered" >      &lt;div className="w-full h-full flex items-center justify-center"&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;div className="w-8 h-12 border-2 border-yellow-200 rounded opacity-50" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >    &lt;/div&gt;</span>
+  );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div className="relative"&gt;</span>
@@ -332,20 +358,9 @@ interface FlipStackProps {
         }
       &gt;
         {/* Stack Layers - exact from inspire.txt */}
-<span class="cstat-no" title="statement not covered" >        {Array.from({ length: Math.min(Math.max(Math.floor(deckCount / 5), 1), 8) }).map((_, i) =&gt; (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;div</span>
-<span class="cstat-no" title="statement not covered" >            key={i}</span>
-<span class="cstat-no" title="statement not covered" >            className="absolute w-24 h-32 bg-yellow-400 border border-yellow-600 rounded-lg shadow-lg"</span>
-<span class="cstat-no" title="statement not covered" >            style={{</span>
-<span class="cstat-no" title="statement not covered" >              transform: `translateY(-${i * (deckCount &gt; 80 ? 3 : deckCount &gt; 60 ? 2.5 : deckCount &gt; 40 ? 2 : deckCount &gt; 20 ? 1.5 : 1)}px) translateX(-${i * 0.5}px)`,</span>
-<span class="cstat-no" title="statement not covered" >              zIndex: 10 - i,</span>
-<span class="cstat-no" title="statement not covered" >            }}</span>
-          &gt;
-<span class="cstat-no" title="statement not covered" >            &lt;div className="w-full h-full flex items-center justify-center"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;div className="w-8 h-12 border-2 border-yellow-200 rounded opacity-50" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >        ))}</span>
+<span class="cstat-no" title="statement not covered" >        {Array.from({ length: Math.min(Math.max(Math.floor(deckCount / 5), 1), 8) }).map(</span>
+<span class="cstat-no" title="statement not covered" >          renderStackLayer,</span>
+<span class="cstat-no" title="statement not covered" >        )}</span>
 &nbsp;
         {/* Main Interactive Card */}
 <span class="cstat-no" title="statement not covered" >        &lt;button</span>
@@ -412,7 +427,7 @@ interface FlipStackProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-10T04:46:16.860Z
+                at 2025-07-10T12:25:03.839Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

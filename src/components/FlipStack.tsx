@@ -11,7 +11,7 @@ interface FlipStackProps {
 function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackProps) {
   const [isFlipping, setIsFlipping] = useState(false);
 
-  const handleFlip = () => {
+  function handleFlip() {
     if (disabled || isFlipping) return;
     setIsFlipping(true);
 
@@ -22,7 +22,23 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
 
     // eslint-disable-next-line no-undef
     setTimeout(completeFlip, 500);
-  };
+  }
+
+  // Render stack layer
+  const renderStackLayer = (_: unknown, i: number) => (
+    <div
+      key={i}
+      className="absolute w-24 h-32 bg-yellow-400 border border-yellow-600 rounded-lg shadow-lg"
+      style={{
+        transform: `translateY(-${i * (deckCount > 80 ? 3 : deckCount > 60 ? 2.5 : deckCount > 40 ? 2 : deckCount > 20 ? 1.5 : 1)}px) translateX(-${i * 0.5}px)`,
+        zIndex: 10 - i,
+      }}
+    >
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="w-8 h-12 border-2 border-yellow-200 rounded opacity-50" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="relative">
@@ -39,20 +55,9 @@ function FlipStack({ onFlip, isCurrent, disabled, deckCount = 50 }: FlipStackPro
         }
       >
         {/* Stack Layers - exact from inspire.txt */}
-        {Array.from({ length: Math.min(Math.max(Math.floor(deckCount / 5), 1), 8) }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-24 h-32 bg-yellow-400 border border-yellow-600 rounded-lg shadow-lg"
-            style={{
-              transform: `translateY(-${i * (deckCount > 80 ? 3 : deckCount > 60 ? 2.5 : deckCount > 40 ? 2 : deckCount > 20 ? 1.5 : 1)}px) translateX(-${i * 0.5}px)`,
-              zIndex: 10 - i,
-            }}
-          >
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-8 h-12 border-2 border-yellow-200 rounded opacity-50" />
-            </div>
-          </div>
-        ))}
+        {Array.from({ length: Math.min(Math.max(Math.floor(deckCount / 5), 1), 8) }).map(
+          renderStackLayer,
+        )}
 
         {/* Main Interactive Card */}
         <button

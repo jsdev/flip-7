@@ -16,6 +16,8 @@ import {
   discardRemainingCards,
   captureRoundData,
 } from './gameLogic.helpers.js';
+import { GameStatus } from './GameStatus.js';
+import { GameConstants } from './GameConstants.js';
 import { maybeReshuffleDeck } from './deck.js';
 
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
@@ -524,31 +526,6 @@ export function bankScore(state: GameState, playerIdx: number): GameState {
     winners: gameOver ? winners : undefined,
     roundHistory: updatedRoundHistory,
   };
-}
-
-export enum GameStatus {
-  DeckEmpty = 'deck-empty',
-  SecondChanceSurvived = 'second-chance-survived',
-  Busted = 'busted',
-  Flip7 = 'flip-7',
-  FlipThreeComplete = 'flip-three-complete',
-  FreezeBanked = 'freeze-banked',
-  SecondChanceAcquired = 'second-chance-acquired',
-  Banked = 'banked',
-  CannotBankBusted = 'cannot-bank-busted',
-  CannotBankDuringFlipThree = 'cannot-bank-during-flip-three',
-  Flipped = 'flipped',
-  Flip7BonusAwarded = 'flip-7-bonus-awarded',
-  ChoicePoint = 'choice-point',
-  NoFlipsRemaining = 'no-flips-remaining',
-  CannotPassDuringFlipThree = 'cannot-pass-during-flip-three',
-  PassingDisabled = 'passing-disabled',
-  PlayerPassed = 'player-passed',
-}
-
-export enum GameConstants {
-  Flip7Bonus = 15,
-  GAME_TARGET_SCORE = 200,
 }
 
 // Helper to reset flip count at start of player's turn

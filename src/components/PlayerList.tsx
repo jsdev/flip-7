@@ -3,7 +3,8 @@ import { Player } from '../types';
 interface PlayerListProps {
   players: ReadonlyArray<Player>;
   currentPlayerIndex: number;
-  onActionTarget?: (playerIndex: number) => void;
+
+  onActionTarget?: (_playerIndex: number) => void;
   actionPrompt?: {
     type: 'freeze' | 'flip-three';
     validTargets: number[];
