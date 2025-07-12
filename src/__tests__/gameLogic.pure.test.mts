@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('Flip 7 Pure Game Logic', () => {
   // Use shared helpers
-  function makePlayer(name) {
+  function makePlayer(name: string) {
     return createPlayer(name);
   }
   function makeState(overrides = {}) {
@@ -19,6 +19,29 @@ describe('Flip 7 Pure Game Logic', () => {
       ...overrides,
     });
   }
+
+  it('should end the round and award bonus when player gets 7 unique number cards via flipCard', () => {
+    // Test via the public flipCard API instead of internal functions
+    const uniqueCards = [1, 2, 3, 4, 5, 6].map((v) => ({ type: 'number' as const, value: v }));
+    const state = makeState({
+      currentPlayer: 0,
+      players: [
+        { ...makePlayer('A'), numberCards: uniqueCards },
+        makePlayer('B'),
+        makePlayer('C'),
+        makePlayer('D'),
+      ],
+      deck: [{ type: 'number' as const, value: 7 }],
+    });
+    const result = flipCard(state);
+    const player = result.players[0];
+    expect(player.numberCards.length).toBe(0);
+    expect(player.banked).toBe(true);
+    expect(player.score).toBe(28 + 15); // Sum of 1-7 = 28, plus 15 bonus
+    expect(result.status).toBe(GameStatus.Flip7BonusAwarded);
+    expect(result.gameOver).toBeFalsy();
+    expect(result.message).toContain('FLIP 7');
+  });
 
   it('number cards are only discarded on bust', () => {
     // Set up a scenario where the current player can flip twice:
@@ -180,7 +203,7 @@ describe('Flip 7 Pure Game Logic', () => {
     return undefined;
   });
 
-  it('awards Flip 7 bonus and ends round, forfeiting unbanked players cards', () => {
+  it('awards Flip 7 bonus and ends round, forfeiting unbanked players cards, but does not end game', () => {
     const uniqueCards = [1, 2, 3, 4, 5, 6, 7].map((v) => ({ type: 'number', value: v }));
     const state = makeState({
       players: [
@@ -203,7 +226,7 @@ describe('Flip 7 Pure Game Logic', () => {
     expect(stateAfter.players[3].banked).toBe(false);
     expect(stateAfter.players[2].score).toBe(3);
     expect(stateAfter.players[2].banked).toBe(true);
-    expect(stateAfter.gameOver).toBe(true);
+    expect(stateAfter.gameOver).toBeFalsy();
     return undefined;
   });
 
@@ -341,7 +364,8 @@ describe('Flip 7 Pure Game Logic', () => {
     expect(d.banked).toBe(true);
     expect(d.score).toBe(28 + 15);
     expect(s1.status).toBe(GameStatus.Flip7BonusAwarded);
-    expect(s1.gameOver).toBe(true);
+    // roundOver is a UI state, not part of pure logic state
+    expect(s1.gameOver).toBeFalsy();
   });
 
   it('returns state unchanged for unknown card type in flipCard', () => {
@@ -407,22 +431,40 @@ describe('Flip 7 Pure Game Logic', () => {
   });
 
   it('bankScore returns CannotBankBusted if player is busted', () => {
-    const state = makeState();
-    state.players[1].busted = true;
+    const state = makeState({
+      players: [
+        makePlayer('A'),
+        { ...makePlayer('B'), busted: true },
+        makePlayer('C'),
+        makePlayer('D'),
+      ],
+    });
     const result = bankScore(state, 1);
     expect(result.status).toBe(GameStatus.CannotBankBusted);
   });
 
   it('bankScore returns CannotBankDuringFlipThree if player is in flipThree', () => {
-    const state = makeState();
-    state.players[2].flipThree = 2;
+    const state = makeState({
+      players: [
+        makePlayer('A'),
+        makePlayer('B'),
+        { ...makePlayer('C'), flipThree: 2 },
+        makePlayer('D'),
+      ],
+    });
     const result = bankScore(state, 2);
     expect(result.status).toBe(GameStatus.CannotBankDuringFlipThree);
   });
 
   it('bankScore advances to next player if current player just banked', () => {
-    const state = makeState();
-    state.players[0].numberCards = [{ type: 'number', value: 5 }];
+    const state = makeState({
+      players: [
+        { ...makePlayer('A'), numberCards: [{ type: 'number', value: 5 }] },
+        makePlayer('B'),
+        makePlayer('C'),
+        makePlayer('D'),
+      ],
+    });
     const result = bankScore(state, 0);
     expect(result.currentPlayer).toBe(1);
     expect(result.status).toBe(GameStatus.Banked);

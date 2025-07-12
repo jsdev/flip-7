@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'preact/hooks';
+import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
 import { generateDeck, shuffleDeck, dealCard } from '../lib/deck';
 import { getFinalScore, celebrateFlip7 } from '../lib/gameLogic.helpers';
 import { CardType, RoundPlayerData } from '../types';
@@ -108,6 +108,7 @@ export default function GameBoard() {
   const [status, setStatus] = useState('Game start!');
   const [actionLog, setActionLog] = useState<ActionLogEntry[]>([]);
   const [gameOver, setGameOver] = useState(false);
+  const [roundOver, setRoundOver] = useState(false);
   const [roundHistory, setRoundHistory] = useState<RoundPlayerData[][]>([]);
   const [eliminatedByFlip7, setEliminatedByFlip7] = useState<
     {
@@ -216,7 +217,7 @@ export default function GameBoard() {
       // Check for Flip 7 bonus
       const uniqueNumbers = new Set(player.numberCards.map((c) => c.value));
       if (player.numberCards.length === 7 && uniqueNumbers.size === 7) {
-        // Trigger Flip 7 bonus and end the game
+        // Trigger Flip 7 bonus and end the round
         const roundScore = getFinalScore(player, 15); // 15 is the Flip 7 bonus
         player.score += roundScore;
         player.numberCards = [];
@@ -248,15 +249,14 @@ export default function GameBoard() {
         newPlayers[actingPlayer] = player;
         setPlayers(newPlayers);
         setEliminatedByFlip7(eliminated);
-        setGameOver(true);
-        setStatus(`🎉 ${player.name} achieved FLIP 7! Game over!`);
+        setRoundOver(true);
+        setStatus(`🎉 ${player.name} achieved FLIP 7! Round over!`);
 
-        // Trigger confetti
-        try {
-          celebrateFlip7();
-        } catch {
-          // Ignore confetti errors
-        }
+        globalThis.setTimeout(() => {
+          try {
+            celebrateFlip7();
+          } catch {}
+        }, 100);
 
         setActionLog([
           ...actionLog,
@@ -270,7 +270,7 @@ export default function GameBoard() {
             flipThreeStep: isFlipThree ? 4 - (ctx.flipThreeState?.flipsRemaining ?? 0) : undefined,
           },
         ]);
-        resetFlipGuard(); // Reset immediately on early return
+        resetFlipGuard();
         return;
       }
 
@@ -457,13 +457,14 @@ export default function GameBoard() {
         // Round is over! Capture round data
         const currentRoundData = captureRoundData(updatedPlayers);
         setRoundHistory((prev) => [...prev, currentRoundData]);
+        setRoundOver(true);
 
-        // Check if anyone is still in the game (not eliminated by multiple busts)
-        const playersStillInGame = updatedPlayers.filter((p) => !p.busted || p.banked);
-
-        if (playersStillInGame.length <= 1) {
-          // Game over - only one player left or no one left
-          setStatus('Game Over!');
+        // Check for game over condition: any player >200 and no tie
+        const scores = updatedPlayers.map((p) => p.score);
+        const maxScore = Math.max(...scores);
+        const winners = updatedPlayers.filter((p) => p.score > 200 && p.score === maxScore);
+        if (winners.length === 1) {
+          setStatus(`Game Over! Winner: ${winners[0].name} with ${winners[0].score} points!`);
           setGameOver(true);
         } else {
           // Start new round - reset player states but keep scores
@@ -474,19 +475,16 @@ export default function GameBoard() {
             actionCards: [],
             busted: false,
             banked: false,
-            isActive: player.isDealer, // Dealer starts next round
+            isActive: player.isDealer,
             flipThree: 0,
             bustedRoundPoints: 0,
           }));
-
           setPlayers(newRoundPlayers);
           setCurrentPlayer(newRoundPlayers.findIndex((p) => p.isDealer));
           setRound((prev) => prev + 1);
           setStatus(
             `Round ${round + 1} begins! ${newRoundPlayers.find((p) => p.isDealer)?.name}'s turn`,
           );
-
-          // Reset deck for new round
           setDeck(() => {
             const d = generateDeck();
             return shuffleDeck(d, Math.random);
@@ -523,8 +521,7 @@ export default function GameBoard() {
     newPlayers[currentPlayer] = player;
 
     if (hasFlip7) {
-      // Flip 7 bonus ends the game immediately
-      // Track eliminated players
+      // Flip 7 bonus ends the round
       const eliminated = newPlayers
         .filter(
           (p, idx) =>
@@ -537,25 +534,18 @@ export default function GameBoard() {
           playerName: p.name,
           potentialScore: getFinalScore(p, 0),
         }));
-
-      // Clear all other players' cards (they are eliminated)
       newPlayers.forEach((p, idx) => {
         if (idx !== currentPlayer && !p.banked && !p.busted) {
           p.numberCards = [];
           p.modifiers = [];
         }
       });
-
       setEliminatedByFlip7(eliminated);
-      setGameOver(true);
-      setStatus(`🎉 ${player.name} achieved FLIP 7! Game over!`);
-
-      // Trigger confetti
+      setRoundOver(true);
+      setStatus(`🎉 ${player.name} achieved FLIP 7! Round over!`);
       try {
         celebrateFlip7();
-      } catch {
-        // Ignore confetti errors
-      }
+      } catch {}
     } else {
       setStatus(`${player.name} banked ${roundScore} points!`);
       advanceTurn(newPlayers);
@@ -588,6 +578,7 @@ export default function GameBoard() {
     setStatus('New game started!');
     setActionLog([]);
     setGameOver(false);
+    setRoundOver(false);
     setRoundHistory([]);
     setEliminatedByFlip7([]);
   }, []);
@@ -598,6 +589,7 @@ export default function GameBoard() {
   const currentRoundScore = getFinalScore(players[currentPlayer]);
   const canBank =
     !gameOver &&
+    !roundOver &&
     !currentAction?.pendingAction &&
     currentRoundScore > 0 &&
     !players[currentPlayer].busted &&
@@ -617,6 +609,52 @@ export default function GameBoard() {
       data-testid="game-board"
     >
       {/* Top Right - Current Scores */}
+      {roundOver && status && status.includes('FLIP 7') && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '2rem',
+              padding: '2rem 3rem',
+              boxShadow: '0 0 32px #0004',
+              textAlign: 'center',
+            }}
+          >
+            <h1 style={{ fontSize: '2.5rem', color: '#1a7f37', marginBottom: '1rem' }}>
+              🎉 FLIP 7 ROUND!
+            </h1>
+            <p style={{ fontSize: '1.5rem', color: '#333' }}>{status}</p>
+            <button
+              style={{
+                marginTop: '2rem',
+                fontSize: '1.2rem',
+                padding: '0.5rem 2rem',
+                borderRadius: '1rem',
+                background: '#1a7f37',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+              onClick={handleNewGame}
+            >
+              Play Again
+            </button>
+          </div>
+        </div>
+      )}
       <div className="absolute top-8 right-8 z-30 w-80">
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4">
           <table className="w-full border-collapse rounded-lg overflow-hidden">

@@ -301,7 +301,7 @@ function handleFlip7Bonus(
     players: newPlayers,
     discard: finalDiscard,
     status: GameStatus.Flip7BonusAwarded,
-    gameOver: true,
+    gameOver: false, // Flip 7 ends round, not game
     eliminatedByFlip7,
     roundHistory: [...state.roundHistory, currentRoundData],
     message: `🎉 ${player.name} achieved FLIP 7! Round over!`,
@@ -483,10 +483,10 @@ export function bankScore(state: GameState, playerIdx: number): GameState {
       players,
       discard: finalDiscard,
       status: GameStatus.Flip7BonusAwarded,
-      gameOver: true,
+      gameOver: false, // Flip 7 ends round, not game
       eliminatedByFlip7,
       roundHistory: [...state.roundHistory, currentRoundData],
-      message: `🎉 ${player.name} achieved FLIP 7! Game over!`,
+      message: `🎉 ${player.name} achieved FLIP 7! Round over!`,
     };
   }
   // Advance to next player if current player just banked, and reset flip count
