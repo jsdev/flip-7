@@ -7,11 +7,15 @@
   publish = "dist"
   
   # Default build command
-  command = "npm run build"
+  command = "npm ci --legacy-peer-deps && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
+  # Skip husky install in CI
+  HUSKY = "0"
+  # Use legacy peer deps for compatibility
+  NPM_FLAGS = "--legacy-peer-deps"
 
 # Redirect rules for SPA (Single Page Application)
 [[redirects]]

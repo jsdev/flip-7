@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --fix --ext .js,.jsx,.ts,.tsx",
-    "prepare": "husky install",
+    "prepare": "husky install || true",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage --reporter=json --outputFile=coverage-summary.json",
