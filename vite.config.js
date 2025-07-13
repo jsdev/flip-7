@@ -4,5 +4,5 @@ import preact from '@preact/preset-vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [preact()],
-  base: process.env.NODE_ENV === 'production' ? '/flip-7/' : '/',
+  base: '/', // Use root path for Netlify (no subdirectory)
 })
