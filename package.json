@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --fix --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --fix --ext .js,.jsx,.ts,.tsx --fic",
     "prepare": "husky install || true",
     "test": "vitest run",
     "test:ui": "vitest --ui",
